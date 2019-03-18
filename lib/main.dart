@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+var _yourName = "Mic";
+var _players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
+
 final ThemeData kDefaultTheme = new ThemeData(
   primarySwatch: Colors.blue,
   accentColor: Colors.purpleAccent[400],
@@ -12,6 +15,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final tec = TextEditingController();
+
+  @override
+  void dispose() {
+    tec.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,7 +40,7 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 120.0),
             TextField(
-              // TODO: store the name somewhere
+              controller: tec,
               decoration: InputDecoration(
                 labelText: 'Enter Name'
               )
@@ -38,6 +49,7 @@ class _HomePageState extends State<HomePage> {
             RaisedButton(
               child: Text('JOIN GAME'),
               onPressed: () {
+                _yourName = tec.text;
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => LobbyPage())
@@ -61,17 +73,20 @@ class _LobbyPageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       endDrawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            // TODO: populate drawer
-            DrawerHeader(
-              child: Text('People')
-            ),
-            ListTile(
-              title: Text('What up')
-            )
-          ]
+        child: ListView.builder(
+          itemCount: _players.length,
+          itemBuilder: (context, index) {
+            final item = _players[index];
+            if (item == _yourName)
+              return ListTile(
+                title: Text(item),
+                subtitle: Text("(me)")
+              );
+            else
+              return ListTile(
+                title: Text(item)
+              );
+          }
         )
       ),
       appBar: AppBar(
@@ -144,5 +159,6 @@ _createRoomDialog(BuildContext context) {
 https://github.com/flutter/flutter/issues/19606
 https://stackoverflow.com/questions/51957960/how-to-change-the-enddrawer-icon-in-flutter
 https://flutter.dev/docs/cookbook/design/drawer
-https://medium.com/@DakshHub/flutter-displaying-dynamic-contents-using-listview-builder-f2cedb1a19fb (haven't read yet)
+https://flutter.dev/docs/cookbook/lists/mixed-list
+https://flutter.dev/docs/cookbook/forms/retrieve-input
 */
