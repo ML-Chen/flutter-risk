@@ -11,7 +11,11 @@ void main() {
 class RiskApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return HomePage();
+    return MaterialApp(
+      title: "RISC!",
+      theme: kDefaultTheme,
+      home: HomePage()
+    );
   }
 }
 
@@ -42,7 +46,7 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  @override
+  @override                               
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
@@ -52,7 +56,7 @@ class _HomePageState extends State<HomePage> {
             SizedBox(height: 80.0),
             Column(
               children: <Widget>[
-                Image.asset('assets/login_icon.png'),
+                // Image.asset('assets/login_icon.png'),
                 SizedBox(height: 20.0),
                 Text('RISC!')
               ]
@@ -68,7 +72,7 @@ class _HomePageState extends State<HomePage> {
             RaisedButton(
               child: Text('JOIN GAME'),
               onPressed: () {
-                _yourName = tec.text;
+                // _yourName = tec.text;
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => LobbyPage())
@@ -84,10 +88,10 @@ class _HomePageState extends State<HomePage> {
 
 class LobbyPage extends StatefulWidget {
   @override
-  _LobbyPageState createState() => _LobbyPageState();
+  State createState() => _LobbyPageState();
 }
 
-class _LobbyPageState extends State<HomePage> {
+class _LobbyPageState extends State<LobbyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,7 +125,7 @@ class _LobbyPageState extends State<HomePage> {
           IconButton(
             icon: Icon(Icons.add),
             tooltip: 'Create Room',
-            onPressed: _createRoomDialog(context)
+            // onPressed: _createRoomDialog(context)
           )
         ]
       ),
@@ -141,38 +145,38 @@ class _LobbyPageState extends State<HomePage> {
   }
 }
 
-_createRoomDialog(BuildContext context) {
-  return showDialog<String>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        contentPadding: const EdgeInsets.all(16.0),
-        content: Row(
-          children: <Widget>[
-            Expanded(
-              child: TextField(
-                autofocus: true
-              )
-            )
-          ],
-        ),
-        actions: <Widget>[
-          FlatButton(
-              child: const Text('CANCEL'),
-              onPressed: () {
-                Navigator.pop(context);
-              }),
-          FlatButton(
-              child: const Text('CREATE'),
-              onPressed: () {
-                Navigator.pop(context);
-                // TODO: handle creating room
-              })
-        ]
-      );
-    }
-  );
-}
+// _createRoomDialog(BuildContext context) {
+//   return showDialog<String>(
+//     context: context,
+//     builder: (BuildContext context) {
+//       return AlertDialog(
+//         contentPadding: const EdgeInsets.all(16.0),
+//         content: Row(
+//           children: <Widget>[
+//             Expanded(
+//               child: TextField(
+//                 autofocus: true
+//               )
+//             )
+//           ],
+//         ),
+//         actions: <Widget>[
+//           FlatButton(
+//               child: const Text('CANCEL'),
+//               onPressed: () {
+//                 Navigator.pop(context);
+//               }),
+//           FlatButton(
+//               child: const Text('CREATE'),
+//               onPressed: () {
+//                 Navigator.pop(context);
+//                 // TODO: handle creating room
+//               })
+//         ]
+//       );
+//     }
+//   );
+// }
 
 /* References
 https://github.com/flutter/flutter/issues/19606
