@@ -2,6 +2,25 @@ import 'package:flutter/material.dart';
 
 var _yourName = "Mic";
 var _players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
+List<Room> _rooms = [Room("mwahaha", ["hehe", "lol", "jk"]), Room("ya", ["whoa", "uh huh"])];
+
+void main() {
+  runApp(new RiskApp());
+}
+
+class RiskApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return HomePage();
+  }
+}
+
+class Room {
+  String host;
+  List<String> otherPlayers;
+
+  Room(this.host, this.otherPlayers);
+}
 
 final ThemeData kDefaultTheme = new ThemeData(
   primarySwatch: Colors.blue,
@@ -107,14 +126,14 @@ class _LobbyPageState extends State<HomePage> {
         ]
       ),
       body: ListView.builder(
-        itemBuilder: (context, position) {
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              // TODO: fill this with non-filler
-              child: Text(position.toString(), style: TextStyle(fontSize: 22.0))
-            )
-          );
+        itemCount: _rooms.length,
+        itemBuilder: (context, index) {
+          final item = _players[index];
+            if (item == _yourName)
+              return ListTile(
+                title: Text(item),
+                subtitle: Text("(me)")
+              );
         }
       )
       // TODO: snackbar about connecting to server or whatever
