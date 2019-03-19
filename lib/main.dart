@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+// import 'package:web_socket_channel/io.dart';
+// import 'package:web_socket_channel/web_socket_channel.dart';
 
 var _yourName = "Mic";
 var _players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
 List<Room> _rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
+// final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
 
 void main() {
   runApp(new RiskApp());
@@ -150,7 +153,6 @@ class _LobbyPageState extends State<LobbyPage> {
   }
 }
 
-// TODO: fix dialog
 void _createRoomDialog(BuildContext context) {
   String newRoomName;
   final tec = TextEditingController();
@@ -198,4 +200,5 @@ https://stackoverflow.com/questions/51957960/how-to-change-the-enddrawer-icon-in
 https://flutter.dev/docs/cookbook/design/drawer
 https://flutter.dev/docs/cookbook/lists/mixed-list
 https://flutter.dev/docs/cookbook/forms/retrieve-input
+https://flutter.dev/docs/cookbook/networking/web-sockets
 */
