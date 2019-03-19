@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 var _yourName = "Mic";
 var _players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
-List<Room> _rooms = [Room("mwahaha", ["hehe", "lol", "jk"]), Room("ya", ["whoa", "uh huh"])];
+List<Room> _rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
 
 void main() {
   runApp(new RiskApp());
@@ -20,10 +20,11 @@ class RiskApp extends StatelessWidget {
 }
 
 class Room {
+  String roomName;
   String host;
   List<String> otherPlayers;
 
-  Room(this.host, this.otherPlayers);
+  Room(this.roomName, this.host, this.otherPlayers);
 }
 
 final ThemeData kDefaultTheme = new ThemeData(
@@ -38,11 +39,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final tec = TextEditingController();
+  final tecYourName = TextEditingController();
 
   @override
   void dispose() {
-    tec.dispose();
+    tecYourName.dispose();
     super.dispose();
   }
 
@@ -63,16 +64,17 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 120.0),
             TextField(
-              controller: tec,
+              controller: tecYourName,
               decoration: InputDecoration(
                 labelText: 'Enter Name'
               )
             ),
             SizedBox(height: 12.0), // spacer
+            // TODO: enable button only when name exists
             RaisedButton(
               child: Text('JOIN GAME'),
               onPressed: () {
-                // _yourName = tec.text;
+                _yourName = tecYourName.text;
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => LobbyPage())
@@ -125,19 +127,20 @@ class _LobbyPageState extends State<LobbyPage> {
           IconButton(
             icon: Icon(Icons.add),
             tooltip: 'Create Room',
-            // onPressed: _createRoomDialog(context)
+            onPressed: () => _createRoomDialog(context)
           )
         ]
       ),
       body: ListView.builder(
         itemCount: _rooms.length,
         itemBuilder: (context, index) {
-          final item = _players[index];
-            if (item == _yourName)
-              return ListTile(
-                title: Text(item),
-                subtitle: Text("(me)")
-              );
+          final room = _rooms[index];
+          // TODO: button: join room
+          // TODO: don't show comma if there's only the host there
+          return ListTile(
+            title: Text(room.roomName),
+            subtitle: Text("👑" + room.host + ", " + room.otherPlayers.join(", "))
+          );
         }
       )
       // TODO: snackbar about connecting to server or whatever
@@ -145,38 +148,47 @@ class _LobbyPageState extends State<LobbyPage> {
   }
 }
 
-// _createRoomDialog(BuildContext context) {
-//   return showDialog<String>(
-//     context: context,
-//     builder: (BuildContext context) {
-//       return AlertDialog(
-//         contentPadding: const EdgeInsets.all(16.0),
-//         content: Row(
-//           children: <Widget>[
-//             Expanded(
-//               child: TextField(
-//                 autofocus: true
-//               )
-//             )
-//           ],
-//         ),
-//         actions: <Widget>[
-//           FlatButton(
-//               child: const Text('CANCEL'),
-//               onPressed: () {
-//                 Navigator.pop(context);
-//               }),
-//           FlatButton(
-//               child: const Text('CREATE'),
-//               onPressed: () {
-//                 Navigator.pop(context);
-//                 // TODO: handle creating room
-//               })
-//         ]
-//       );
-//     }
-//   );
-// }
+// TODO: fix dialog
+void _createRoomDialog(BuildContext context) {
+  String newRoomName;
+  final tec = TextEditingController();
+
+  showDialog<String>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Create Room'),
+        content: Row(
+          children: <Widget>[
+            Expanded(
+              child: TextField(
+                autofocus: true,
+                controller: tec,
+                decoration: InputDecoration(
+                  hintText: 'Room name'
+                )
+              )
+            )
+          ],
+        ),
+        actions: <Widget>[
+          FlatButton(
+              child: const Text('CANCEL'),
+              onPressed: () {
+                Navigator.pop(context);
+              }),
+          FlatButton(
+              child: const Text('CREATE'),
+              onPressed: () {
+                _rooms.add(Room(tec.text, _yourName, <String>[]));
+                Navigator.pop(context);
+                // TODO: handle creating room
+              })
+        ]
+      );
+    }
+  );
+}
 
 /* References
 https://github.com/flutter/flutter/issues/19606
