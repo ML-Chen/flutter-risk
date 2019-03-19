@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-// import 'package:web_socket_channel/io.dart';
-// import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 var _yourName = "Mic";
 var _players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
 List<Room> _rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
-// final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
+final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
 
 void main() {
   runApp(new RiskApp());
@@ -74,8 +74,9 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 12.0), // spacer
             // TODO: enable button only when name exists
+            // TODO: check name is not taken
             RaisedButton(
-              child: Text('JOIN GAME'),
+              child: Text('START'),
               onPressed: () {
                 _yourName = tecYourName.text;
                 Navigator.push(
@@ -142,6 +143,7 @@ class _LobbyPageState extends State<LobbyPage> {
             title: Text(room.roomName),
             subtitle: (room.otherPlayers.isEmpty) ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
             // TODO: join room logic
+            // TODO: show READY button after joining, and enable that after we have at least three(?) players
             trailing: FlatButton(
               child: const Text('JOIN'),
             )
@@ -201,4 +203,5 @@ https://flutter.dev/docs/cookbook/design/drawer
 https://flutter.dev/docs/cookbook/lists/mixed-list
 https://flutter.dev/docs/cookbook/forms/retrieve-input
 https://flutter.dev/docs/cookbook/networking/web-sockets
+https://www.didierboelens.com/2018/06/web-sockets---build-a-real-time-game/
 */
