@@ -135,11 +135,13 @@ class _LobbyPageState extends State<LobbyPage> {
         itemCount: _rooms.length,
         itemBuilder: (context, index) {
           final room = _rooms[index];
-          // TODO: button: join room
-          // TODO: don't show comma if there's only the host there
           return ListTile(
             title: Text(room.roomName),
-            subtitle: Text("👑" + room.host + ", " + room.otherPlayers.join(", "))
+            subtitle: (room.otherPlayers.isEmpty) ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
+            // TODO: join room logic
+            trailing: FlatButton(
+              child: const Text('JOIN'),
+            )
           );
         }
       )
