@@ -1,3 +1,5 @@
+part of actors;
+
 import 'package:json_annotation/json_annotation.dart';
 // https://flutter.dev/docs/development/data-and-backend/json
 
