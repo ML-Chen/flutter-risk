@@ -1,26 +1,32 @@
-import 'dart:convert';
+// import 'dart:convert';
 
-final jsonEncoder = JsonEncoder();
+// final jsonEncoder = JsonEncoder();
 
 class Token {
-	var token, publictoken;
-
+	String token, publictoken;
   Token(this.token, this.publictoken);
-	Token.fromOther(other) {
-		this.token = other.token;
-    this.publictoken = other.publictoken;
-	}
 }
 
 class Ping {
-	var msg;
-
-	Ping(this.msg);
-	Ping.fromOther(other) {
-		this.msg = other.msg;
+	String msg;
+	Ping() {
+		this.msg = "Ping";
 	}
 }
 
+class Pong {
+	String msg;
+	Pong() {
+		this.msg = "Pong";
+	}
+}
+
+class CreateRoom {
+	String roomName, token;
+	CreateRoom(this.roomName, this.token);
+}
+
+/*
 class ListRoom {
 	var token, _type;
 
@@ -223,16 +229,7 @@ class AssignName {
 	}
 }
 
-class Pong {
-	var token, _type;
-	
-	Pong(token) {
-		this.token = token;
-		this._type = 'actors.Pong';
-	}
-}
-
-processMessage(store, socket, toastr, message) {
+processMessage(store, socket, message) {
 	switch (message._type) {
 		case 'actors.Token':
 			const packet = new Token(message);
@@ -293,3 +290,4 @@ processMessage(store, socket, toastr, message) {
 			print(jsonEncoder.convert(message));
 	}
 }
+*/
