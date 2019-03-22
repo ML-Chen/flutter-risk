@@ -6,17 +6,17 @@ import 'dart:convert' as JSON;
 
 enum Maybe { True, False, Idk }
 
+final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
 var token = "";
 var publicToken = "";
 var yourName = "";
+var nameIsValid = Maybe.Idk;
+var nameAssignResult = Maybe.Idk;
 var players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
 List<Room> rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
-final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
 var yourRoom = null;
 var isReady = false;
 final MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
-var nameIsValid = Maybe.Idk;
-var nameAssignResult = Maybe.Idk;
 
 void main() {
   runApp(new RiskApp());

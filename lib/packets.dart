@@ -44,14 +44,12 @@ StreamSubscription<T> channel.stream.listen((message) {
       socket.sink.add(JSON.encode(packet));
       break;
     case 'actors.NameCheckResult':
-      if (msg["name"] != yourName) nameIsValid = Maybe.Idk;
-      else if (msg["available"] == 'true') nameIsValid = Maybe.True;
-      else nameIsValid = Maybe.False;
+      if (msg["name"] == yourName)
+        nameIsValid = (msg["available"] == 'true') ? Maybe.True : Maybe.False;
       break;
     case 'actors.NameAssignResult':
-      if (msg["name"] != yourName) nameAssignResult = Maybe.Idk;
-      else if (msg["available"] == 'true') nameAssignResult = Maybe.True;
-      else nameAssignResult = Maybe.False;
+      if (msg["name"] == yourName)
+        nameAssignResult = (msg["available"] == 'true') ? Maybe.True : Maybe.False;
       break;
     case 'actors.NotifyRoomsChanged':
       break;
