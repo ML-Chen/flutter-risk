@@ -7,6 +7,9 @@ var _yourName = "";
 var _players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
 List<Room> _rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
 final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
+var _yourRoom = null;
+var _isReady = false;
+var MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
 
 void main() {
   runApp(new RiskApp());
@@ -83,6 +86,7 @@ class _HomePageState extends State<HomePage> {
               child: Text('START'),
               onPressed: () {
                 if (!_nameIsValid) return null;
+                // TODO: send stuff to server
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => LobbyPage())
@@ -146,10 +150,22 @@ class _LobbyPageState extends State<LobbyPage> {
           return ListTile(
             title: Text(room.roomName),
             subtitle: (room.otherPlayers.isEmpty) ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
-            // TODO: join room logic
-            // TODO: show READY button after joining, and enable that after we have at least three(?) players
-            trailing: FlatButton(
-              child: const Text('JOIN'),
+            trailing: Opacity(
+              opacity: _yourRoom == null || _yourRoom == room ? 1.0 : 0.0,
+              child: FlatButton(
+                child: _yourRoom == null ? const Text('JOIN') : const Text('READY'),
+                onPressed: () {
+                  if (_yourRoom == null) { // JOIN
+                    _yourRoom = room;
+                    room.otherPlayers.add(_yourName);
+                  } else if (!_isReady && room.otherPlayers.length >= MIN_PLAYERS) { // READY
+                    // TODO: send stuff to server
+                    _isReady = true;
+                  } else {
+                    return null;
+                  }
+                }
+              )
             )
           );
         }
