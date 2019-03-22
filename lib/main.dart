@@ -3,7 +3,7 @@ import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'actors/actors.dart'
 
-var _yourName = "Mic";
+var _yourName = "";
 var _players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
 List<Room> _rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
 final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
@@ -43,13 +43,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final tecYourName = TextEditingController();
-
-  @override
-  void dispose() {
-    tecYourName.dispose();
-    super.dispose();
-  }
+  var _nameIsValid = false;
 
   @override                               
   Widget build(BuildContext context) {
@@ -68,18 +62,27 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 120.0),
             TextField(
-              controller: tecYourName,
               decoration: InputDecoration(
                 labelText: 'Enter Name'
-              )
+              ),
+              onChanged: (text) {
+                // TODO: check with server whether name is taken
+                if (text.length > 0) {
+                  nameIsValid = true;
+                  _yourName = text;
+                }
+              },
+              validator: (value) {
+                if (value.isEmpty) {
+                  return 'Please enter some text';
+                }
+              }
             ),
             SizedBox(height: 12.0), // spacer
-            // TODO: enable button only when name exists
-            // TODO: check name is not taken
             RaisedButton(
               child: Text('START'),
               onPressed: () {
-                _yourName = tecYourName.text;
+                if (!_nameIsValid) return null;
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => LobbyPage())
