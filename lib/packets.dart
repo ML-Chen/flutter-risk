@@ -29,12 +29,17 @@ void setName(IOWebSocketChannel socket, String token, String name) {
   socket.sink.add(JSON.encode(packet));
 }
 
+void createRoom(IOWebSocketChannel socket, String token, String roomId) {
+
+}
+
 StreamSubscription<T> channel.stream.listen((message) {
   Map<String, dynamic> msg = JSON.decode(message);
   switch (msg["_type"]) {
     case 'actors.Token':
-      _token = msg["token"];
-      _publicToken = msg["publicToken"];
+      token = msg["token"];
+      publicToken = msg["publicToken"];
+      showSnackBar = true;
       break;
     case 'actors.Ping':
       var packet = {
@@ -51,15 +56,19 @@ StreamSubscription<T> channel.stream.listen((message) {
       if (msg["name"] == yourName)
         nameAssignResult = (msg["available"] == 'true') ? Maybe.True : Maybe.False;
       break;
-    case 'actors.NotifyRoomsChanged':
-      break;
-    case 'actors.JoinedRoom':
+    case 'actors.NotifyClientsChanged':
+      players = [];
+      for (var clientBrief in msg["clientSeq"]) {
+        players.add(clientBrief["name"]);
+      }
       break;
     case 'actors.CreatedRoom':
       break;
     case 'actors.RoomCreationResult':
       break;
-    case 'actors.NotifyClientsChanged':
+    case 'actors.NotifyRoomsChanged':
+      break;
+    case 'actors.JoinedRoom':
       break;
     case 'actors.NotifyRoomStatus':
       break;

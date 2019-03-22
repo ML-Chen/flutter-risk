@@ -9,6 +9,7 @@ enum Maybe { True, False, Idk }
 final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
 var token = "";
 var publicToken = "";
+var showSnackBar = false;
 var yourName = "";
 var nameIsValid = Maybe.Idk;
 var nameAssignResult = Maybe.Idk;
@@ -45,8 +46,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final snackBar = SnackBar(
+    content: Text('Connected to server')
+  );
+
   @override                               
   Widget build(BuildContext context) {
+    if (showSnackBar) {
+      Scaffold.of(context).showSnackBar(snackBar);
+      showSnackBar = false;
+    }
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -169,7 +178,6 @@ class _LobbyPageState extends State<LobbyPage> {
           );
         }
       )
-      // TODO: snackbar about connecting to server or whatever
     );
   }
 }
