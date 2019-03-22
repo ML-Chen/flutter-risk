@@ -1,6 +1,87 @@
-part of actors;
+import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'packets.dart';
+import 'dart:convert' as JSON;
 
-import 'package:json_annotation/json_annotation.dart';
+class Room {
+  String roomName;
+  String host;
+  List<String> otherPlayers;
+
+  Room(this.roomName, this.host, this.otherPlayers);
+}
+
+void checkName(IOWebSocketChannel socket, String token, String name) {
+  var packet = {
+    "_type": "actors.CheckName",
+    "token": _token,
+    "name": _yourName
+  };
+  socket.sink.add(JSON.encode(packet));
+}
+
+void setName(IOWebSocketChannel socket, String token, String name) {
+  var packet = {
+    "_type": "actors.AssignName",
+    "token": _token,
+    "name": _yourName
+  };
+  socket.sink.add(JSON.encode(packet));
+}
+
+StreamSubscription<T> channel.stream.listen((message) {
+  Map<String, dynamic> msg = JSON.decode(message);
+  switch (msg["_type"]) {
+    case 'actors.Token':
+      _token = msg["token"];
+      _publicToken = msg["publicToken"];
+      break;
+    case 'actors.Ping':
+      var packet = {
+        "_type": "Pong",
+        "msg": "Pong"
+      };
+      socket.sink.add(JSON.encode(packet));
+      break;
+    case 'actors.NameCheckResult':
+      if (msg["name"] != yourName) nameIsValid = Maybe.Idk;
+      else if (msg["available"] == 'true') nameIsValid = Maybe.True;
+      else nameIsValid = Maybe.False;
+      break;
+    case 'actors.NameAssignResult':
+      if (msg["name"] != yourName) nameAssignResult = Maybe.Idk;
+      else if (msg["available"] == 'true') nameAssignResult = Maybe.True;
+      else nameAssignResult = Maybe.False;
+      break;
+    case 'actors.NotifyRoomsChanged':
+      break;
+    case 'actors.JoinedRoom':
+      break;
+    case 'actors.CreatedRoom':
+      break;
+    case 'actors.RoomCreationResult':
+      break;
+    case 'actors.NotifyClientsChanged':
+      break;
+    case 'actors.NotifyRoomStatus':
+      break;
+    case 'actors.NotifyGameStarted':
+      break;
+    case 'actors.NotifyGameState':
+      break;
+    case 'actors.SendMapResource':
+      break;
+    case 'actors.NotifyTurn':
+      break;
+    case 'actors.Err':
+      break;
+    default:
+      print(JSON.stringify(message));
+  }
+}
+
+/*
+// import 'package:json_annotation/json_annotation.dart';
 // https://flutter.dev/docs/development/data-and-backend/json
 
 abstract class AuthenticatedMsg { String token; }
@@ -105,17 +186,17 @@ class JoinedRoom extends OutEvent {
 }
 
 class NameCheckResult extends OutEvent {
-	Boolean available; String name;
+	bool available; String name;
 	NameCheckResult(this.available, this.name);
 }
 
 class NameAssignResult extends OutEvent {
-	Boolean success; String name; String message = "";
+	bool success; String name; String message = "";
 	NameAssignResult(this.success, this.name);
 }
 
 class RoomCreationResult extends OutEvent {
-	Boolean success; String message = "";
+	bool success; String message = "";
 	RoomCreationResult(this.success);
 }
 
@@ -188,56 +269,5 @@ class AssignName extends AuthenticatedRootMsg with SerializableInEvent {
 class CreateRoom extends AuthenticatedRootMsg with SerializableInEvent {
 	String roomName; String token;
 	CreateRoom(this.roomName, this.token);
-}
-
-/*
-class SerializableInEvent {
-  static final SerializableInEvent _singleton = new MyClass._internal();
-
-  factory SerializableInEvent() {
-    return _singleton;
-  }
-
-	var assignNameRead = Json.reads[AssignName];
-  var joinRoomRead = Json.reads[JoinRoom];
-  var createRoomRead = Json.reads[CreateRoom];
-  var readyRead = Json.reads[ClientReady];
-  var startGameRead = Json.reads[StartGame];
-  var pongRead = Json.reads[Pong];
-  var listRoomRead = Json.reads[ListRoom];
-  var checkNameRead = Json.reads[CheckName];
-  var leaveRoomRead = Json.reads[LeaveRoom];
-  var gameMsgRead = SerializableGameMsg.gameMsgRead;
-  var chatMsgRead = SerializableChatMsg.chatMsgRead;
-  var forwardToGameRead = Json.reads[ForwardToGame];
-  var forwardToChatRead = Json.reads[ForwardToChat];
-  var serializableInEventRead = Json.reads[SerializableInEvent];
-}
-
-object OutEvent {
-  var notifyClientsChangedWrite = Json.writes[NotifyClientsChanged]
-  var notifyRoomsChangedWrite = Json.writes[NotifyRoomsChanged]
-  var notifyRoomStatusWrite = Json.writes[NotifyRoomStatus]
-  var tokenWrite = Json.writes[Token]
-  var okWrite = Json.writes[Ok]
-  var createdRoomWrite = Json.writes[CreatedRoom]
-  var joinedRoomWrite = Json.writes[JoinedRoom]
-  var pingWrite = Json.writes[Ping]
-  var errWrite = Json.writes[Err]
-  var killWrite = Json.writes[Kill]
-  var userMessageWrite = Json.writes[UserMessage]
-  var roomMessageWrite = Json.writes[RoomMessage]
-  var nameCheckResultWrite = Json.writes[NameCheckResult]
-  var nameAssignResultWrite = Json.writes[NameAssignResult]
-  var roomCreationResult = Json.writes[RoomCreationResult]
-  var sendMapResourceWrite = Json.writes[SendMapResource]
-
-  var notifyGameStateWrite = Json.writes[NotifyGameState]
-  var notifyGameStartedWrite = Json.writes[NotifyGameStarted]
-  var notifyGameStartWrite = Json.writes[NotifyGameStart]
-  var notifyTurnWrite = Json.writes[NotifyTurn]
-
-  var outEventFormat = Json.writes[OutEvent]
-  var messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[SerializableInEvent, OutEvent]
 }
 */

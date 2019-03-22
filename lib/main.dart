@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'actors/actors.dart'
+import 'packets.dart';
+import 'dart:convert' as JSON;
 
-var _yourName = "";
-var _players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
-List<Room> _rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
+enum Maybe { True, False, Idk }
+
+var token = "";
+var publicToken = "";
+var yourName = "";
+var players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
+List<Room> rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
 final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
-var _yourRoom = null;
-var _isReady = false;
-var MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
+var yourRoom = null;
+var isReady = false;
+final MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
+var nameIsValid = Maybe.Idk;
+var nameAssignResult = Maybe.Idk;
 
 void main() {
   runApp(new RiskApp());
@@ -26,14 +33,6 @@ class RiskApp extends StatelessWidget {
   }
 }
 
-class Room {
-  String roomName;
-  String host;
-  List<String> otherPlayers;
-
-  Room(this.roomName, this.host, this.otherPlayers);
-}
-
 final ThemeData kDefaultTheme = new ThemeData(
   primarySwatch: Colors.blue,
   accentColor: Colors.purpleAccent[400],
@@ -46,8 +45,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  var _nameIsValid = false;
-
   @override                               
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,15 +66,16 @@ class _HomePageState extends State<HomePage> {
                 labelText: 'Enter Name'
               ),
               onChanged: (text) {
-                // TODO: check with server whether name is taken
-                if (text.length > 0) {
-                  nameIsValid = true;
-                  _yourName = text;
-                }
+                nameIsValid = Maybe.Idk;
+                yourName = text;
+                checkName(channel, token, yourName);
+                // Server response: NameCheckResult, according to which nameIsValid is updated
               },
               validator: (value) {
                 if (value.isEmpty) {
                   return 'Please enter some text';
+                } else if (nameIsValid == Maybe.False) {
+                  return 'That name is already taken';
                 }
               }
             ),
@@ -85,8 +83,9 @@ class _HomePageState extends State<HomePage> {
             RaisedButton(
               child: Text('START'),
               onPressed: () {
-                if (!_nameIsValid) return null;
-                // TODO: send stuff to server
+                if (nameIsValid == Maybe.Idk || nameIsValid == Maybe.False) return null;
+                setName(channel, token, name);
+                // TODO: go to lobby page only after NameAssignResult validation?
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => LobbyPage())
@@ -111,10 +110,10 @@ class _LobbyPageState extends State<LobbyPage> {
     return Scaffold(
       endDrawer: Drawer(
         child: ListView.builder(
-          itemCount: _players.length,
+          itemCount: players.length,
           itemBuilder: (context, index) {
-            final item = _players[index];
-            if (item == _yourName)
+            final item = players[index];
+            if (item == yourName)
               return ListTile(
                 title: Text(item),
                 subtitle: Text("(me)")
@@ -144,23 +143,23 @@ class _LobbyPageState extends State<LobbyPage> {
         ]
       ),
       body: ListView.builder(
-        itemCount: _rooms.length,
+        itemCount: rooms.length,
         itemBuilder: (context, index) {
-          final room = _rooms[index];
+          final room = rooms[index];
           return ListTile(
             title: Text(room.roomName),
             subtitle: (room.otherPlayers.isEmpty) ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
             trailing: Opacity(
-              opacity: _yourRoom == null || _yourRoom == room ? 1.0 : 0.0,
+              opacity: yourRoom == null || yourRoom == room ? 1.0 : 0.0,
               child: FlatButton(
-                child: _yourRoom == null ? const Text('JOIN') : const Text('READY'),
+                child: yourRoom == null ? const Text('JOIN') : const Text('READY'),
                 onPressed: () {
-                  if (_yourRoom == null) { // JOIN
-                    _yourRoom = room;
-                    room.otherPlayers.add(_yourName);
-                  } else if (!_isReady && room.otherPlayers.length >= MIN_PLAYERS) { // READY
+                  if (yourRoom == null) { // Button shows JOIN
+                    yourRoom = room;
+                    room.otherPlayers.add(yourName);
+                  } else if (!isReady && room.otherPlayers.length >= MIN_PLAYERS) { // Button shows READY
                     // TODO: send stuff to server
-                    _isReady = true;
+                    isReady = true;
                   } else {
                     return null;
                   }
@@ -206,7 +205,7 @@ void _createRoomDialog(BuildContext context) {
           FlatButton(
               child: const Text('CREATE'),
               onPressed: () {
-                _rooms.add(Room(tec.text, _yourName, <String>[]));
+                rooms.add(Room(tec.text, yourName, <String>[]));
                 Navigator.pop(context);
                 // TODO: handle creating room
               })
@@ -224,4 +223,5 @@ https://flutter.dev/docs/cookbook/lists/mixed-list
 https://flutter.dev/docs/cookbook/forms/retrieve-input
 https://flutter.dev/docs/cookbook/networking/web-sockets
 https://www.didierboelens.com/2018/06/web-sockets---build-a-real-time-game/
+https://medium.com/flutter-community/reactive-programming-streams-bloc-6f0d2bd2d248
 */
