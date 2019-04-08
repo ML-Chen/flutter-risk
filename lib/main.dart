@@ -8,7 +8,7 @@ enum Maybe { True, False, Idk }
 
 // final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
 // To find the IP of your server, type ipconfig in Command Prompt and Wireless LAN adapter Wi-Fi: IPv4 address
-final channel = IOWebSocketChannel.connect('ws://128.61.117.149:8080');
+final channel = IOWebSocketChannel.connect('ws://128.61.117.149:9000');
 var token = "";
 var publicToken = "";
 var showSnackBar = false;
