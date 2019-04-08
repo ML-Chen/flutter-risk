@@ -6,7 +6,9 @@ import 'dart:convert' as JSON;
 
 enum Maybe { True, False, Idk }
 
-final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
+// final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
+// To find the IP of your server, type ipconfig in Command Prompt and Wireless LAN adapter Wi-Fi: IPv4 address
+final channel = IOWebSocketChannel.connect('ws://128.61.117.149:8080');
 var token = "";
 var publicToken = "";
 var showSnackBar = false;
@@ -19,6 +21,7 @@ var yourRoom;
 var isReady = false;
 const MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
 var subscription = channel.stream.listen((message) {
+  print(message);
   Map<String, dynamic> msg = JSON.jsonDecode(message);
   switch (msg["_type"]) {
     case 'actors.Token':
