@@ -15,9 +15,62 @@ var nameIsValid = Maybe.Idk;
 var nameAssignResult = Maybe.Idk;
 var players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
 List<Room> rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
-var yourRoom = null;
+var yourRoom;
 var isReady = false;
-final MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
+const MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
+var subscription = channel.stream.listen((message) {
+  Map<String, dynamic> msg = JSON.jsonDecode(message);
+  switch (msg["_type"]) {
+    case 'actors.Token':
+      token = msg["token"];
+      publicToken = msg["publicToken"];
+      showSnackBar = true;
+      break;
+    case 'actors.Ping':
+      var packet = {
+        "_type": "Pong",
+        "msg": "Pong"
+      };
+      channel.sink.add(JSON.jsonEncode(packet));
+      break;
+    case 'actors.NameCheckResult':
+      if (msg["name"] == yourName)
+        nameIsValid = (msg["available"] == 'true') ? Maybe.True : Maybe.False;
+      break;
+    case 'actors.NameAssignResult':
+      if (msg["name"] == yourName)
+        nameAssignResult = (msg["available"] == 'true') ? Maybe.True : Maybe.False;
+      break;
+    case 'actors.NotifyClientsChanged':
+      players = [];
+      for (var clientBrief in msg["clientSeq"]) {
+        players.add(clientBrief["name"]);
+      }
+      break;
+    case 'actors.CreatedRoom':
+      break;
+    case 'actors.RoomCreationResult':
+      break;
+    case 'actors.NotifyRoomsChanged':
+      break;
+    case 'actors.JoinedRoom':
+      break;
+    case 'actors.NotifyRoomStatus':
+      break;
+    case 'actors.NotifyGameStarted':
+      break;
+    case 'actors.NotifyGameState':
+      break;
+    case 'actors.SendMapResource':
+      break;
+    case 'actors.NotifyTurn':
+      break;
+    case 'actors.Err':
+      break;
+    default:
+      print(message);
+  }
+});
 
 void main() {
   runApp(new RiskApp());
@@ -93,7 +146,7 @@ class _HomePageState extends State<HomePage> {
               child: Text('START'),
               onPressed: () {
                 if (nameIsValid == Maybe.Idk || nameIsValid == Maybe.False) return null;
-                setName(name);
+                setName(yourName);
                 // TODO: go to lobby page only after NameAssignResult validation?
                 Navigator.push(
                   context,
