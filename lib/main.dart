@@ -77,7 +77,7 @@ class _HomePageState extends State<HomePage> {
               onChanged: (text) {
                 nameIsValid = Maybe.Idk;
                 yourName = text;
-                checkName(channel, token, yourName);
+                checkName(yourName);
                 // Server response: NameCheckResult, according to which nameIsValid is updated
               },
               validator: (value) {
@@ -93,7 +93,7 @@ class _HomePageState extends State<HomePage> {
               child: Text('START'),
               onPressed: () {
                 if (nameIsValid == Maybe.Idk || nameIsValid == Maybe.False) return null;
-                setName(channel, token, name);
+                setName(name);
                 // TODO: go to lobby page only after NameAssignResult validation?
                 Navigator.push(
                   context,

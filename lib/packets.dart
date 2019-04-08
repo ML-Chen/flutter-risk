@@ -11,25 +11,25 @@ class Room {
   Room(this.roomName, this.host, this.otherPlayers);
 }
 
-void checkName(IOWebSocketChannel socket, String token, String name) {
+void checkName(String name) {
   var packet = {
     "_type": "actors.CheckName",
     "token": _token,
     "name": _yourName
   };
-  socket.sink.add(JSON.encode(packet));
+  channel.sink.add(JSON.encode(packet));
 }
 
-void setName(IOWebSocketChannel socket, String token, String name) {
+void setName(String name) {
   var packet = {
     "_type": "actors.AssignName",
     "token": _token,
     "name": _yourName
   };
-  socket.sink.add(JSON.encode(packet));
+  channel.sink.add(JSON.encode(packet));
 }
 
-void createRoom(IOWebSocketChannel socket, String token, String roomId) {
+void createRoom(String roomId) {
 
 }
 
