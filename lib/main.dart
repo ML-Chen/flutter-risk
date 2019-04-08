@@ -130,23 +130,24 @@ class _HomePageState extends State<HomePage> {
               onChanged: (text) {
                 nameIsValid = Maybe.Idk;
                 yourName = text;
-                checkName(yourName);
+                checkName(yourName, token, channel);
                 // Server response: NameCheckResult, according to which nameIsValid is updated
               },
-              validator: (value) {
-                if (value.isEmpty) {
-                  return 'Please enter some text';
-                } else if (nameIsValid == Maybe.False) {
-                  return 'That name is already taken';
-                }
-              }
+              // See https://flutter.dev/docs/cookbook/forms/validation – we'd need to change this from a TextField to a TextFormField
+              // validator: (value) {
+              //   if (value.isEmpty) {
+              //     return 'Please enter some text';
+              //   } else if (nameIsValid == Maybe.False) {
+              //     return 'That name is already taken';
+              //   }
+              // }
             ),
             SizedBox(height: 12.0), // spacer
             RaisedButton(
               child: Text('START'),
               onPressed: () {
                 if (nameIsValid == Maybe.Idk || nameIsValid == Maybe.False) return null;
-                setName(yourName);
+                setName(yourName, token, channel);
                 // TODO: go to lobby page only after NameAssignResult validation?
                 Navigator.push(
                   context,
