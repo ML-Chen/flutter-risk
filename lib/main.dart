@@ -9,7 +9,7 @@ enum Maybe { True, False, Idk }
 IOWebSocketChannel channel;
 var token = "";
 var publicToken = "";
-var showSnackBar = false;
+var showSnackBar = true;
 var yourName = "";
 var nameIsValid = Maybe.Idk;
 var nameAssignResult = Maybe.Idk;
@@ -18,68 +18,71 @@ List<Room> rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2
 var yourRoom;
 var isReady = false;
 const MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
-var subscription = channel.stream.listen((message) {
-  print(message);
-  Map<String, dynamic> msg = JSON.jsonDecode(message);
-  switch (msg["_type"]) {
-    case 'actors.Token':
-      token = msg["token"];
-      publicToken = msg["publicToken"];
-      showSnackBar = true;
-      break;
-    case 'actors.Ping':
-      var packet = {
-        "_type": "Pong",
-        "msg": "Pong"
-      };
-      channel.sink.add(JSON.jsonEncode(packet));
-      break;
-    case 'actors.NameCheckResult':
-      if (msg["name"] == yourName)
-        nameIsValid = (msg["available"] == 'true') ? Maybe.True : Maybe.False;
-      break;
-    case 'actors.NameAssignResult':
-      if (msg["name"] == yourName)
-        nameAssignResult = (msg["available"] == 'true') ? Maybe.True : Maybe.False;
-      break;
-    case 'actors.NotifyClientsChanged':
-      players = [];
-      for (var clientBrief in msg["clientSeq"]) {
-        players.add(clientBrief["name"]);
-      }
-      break;
-    case 'actors.CreatedRoom':
-      break;
-    case 'actors.RoomCreationResult':
-      break;
-    case 'actors.NotifyRoomsChanged':
-      break;
-    case 'actors.JoinedRoom':
-      break;
-    case 'actors.NotifyRoomStatus':
-      break;
-    case 'actors.NotifyGameStarted':
-      break;
-    case 'actors.NotifyGameState':
-      break;
-    case 'actors.SendMapResource':
-      break;
-    case 'actors.NotifyTurn':
-      break;
-    case 'actors.Err':
-      break;
-    default:
-      print(message);
-  }
-});
 
-void main() {
+void main() async {
   // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi
   try {
     channel = IOWebSocketChannel.connect('ws://143.215.117.76:9000/ws');
   } catch (e) {
     print(e);
   }
+
+  var subscription = channel.stream.listen((message) {
+    print("text " + message);
+    Map<String, dynamic> msg = JSON.jsonDecode(message);
+    switch (msg["_type"]) {
+      case 'actors.Token':
+        token = msg["token"];
+        publicToken = msg["publicToken"];
+        showSnackBar = true;
+        break;
+      case 'actors.Ping':
+        print("PING RECEIVED");
+        var packet = {
+          "_type": "actors.Pong",
+          "token": token
+        };
+        channel.sink.add(JSON.jsonEncode(packet));
+        break;
+      case 'actors.NameCheckResult':
+        if (msg["name"] == yourName)
+          nameIsValid = (msg["available"]) ? Maybe.True : Maybe.False;
+        break;
+      case 'actors.NameAssignResult':
+        if (msg["name"] == yourName)
+          nameAssignResult = (msg["available"] == 'true') ? Maybe.True : Maybe.False;
+        break;
+      case 'actors.NotifyClientsChanged':
+        players = [];
+        for (var clientBrief in msg["clientSeq"]) {
+          players.add(clientBrief["name"]);
+        }
+        break;
+      case 'actors.CreatedRoom':
+        break;
+      case 'actors.RoomCreationResult':
+        break;
+      case 'actors.NotifyRoomsChanged':
+        break;
+      case 'actors.JoinedRoom':
+        break;
+      case 'actors.NotifyRoomStatus':
+        break;
+      case 'actors.NotifyGameStarted':
+        break;
+      case 'actors.NotifyGameState':
+        break;
+      case 'actors.SendMapResource':
+        break;
+      case 'actors.NotifyTurn':
+        break;
+      case 'actors.Err':
+        break;
+      default:
+        print(message);
+    }
+  });
+
   runApp(new RiskApp());
 }
 
@@ -112,10 +115,6 @@ class _HomePageState extends State<HomePage> {
 
   @override                               
   Widget build(BuildContext context) {
-    if (showSnackBar) {
-      Scaffold.of(context).showSnackBar(snackBar);
-      showSnackBar = false;
-    }
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -135,9 +134,13 @@ class _HomePageState extends State<HomePage> {
                 labelText: 'Enter Name'
               ),
               onChanged: (text) {
-                nameIsValid = Maybe.Idk;
                 yourName = text;
                 checkName(yourName, token, channel);
+                print(nameIsValid);
+                if (nameIsValid == Maybe.True)  {
+                  print("TRYING TO SHOW SNACKBAR");
+                  Scaffold.of(context).showSnackBar(snackBar);
+                }
                 // Server response: NameCheckResult, according to which nameIsValid is updated
               },
               // See https://flutter.dev/docs/cookbook/forms/validation – we'd need to change this from a TextField to a TextFormField
