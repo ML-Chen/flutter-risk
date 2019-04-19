@@ -22,13 +22,15 @@ const MIN_PLAYERS = 2; // minimum number of players to start a game, excluding t
 void main() async {
   // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi
   try {
-    channel = IOWebSocketChannel.connect('ws://143.215.117.76:9000/ws');
+    // channel = IOWebSocketChannel.connect('ws://143.215.117.76:9000/ws');
+    channel = IOWebSocketChannel.connect('ws://128.61.116.219:9000/ws');
+    print("Connected to server");
   } catch (e) {
-    print(e);
+    print("Exception when connecting to server: " + e);
   }
 
   var subscription = channel.stream.listen((message) {
-    print("text " + message);
+    print("Message received: " + message);
     Map<String, dynamic> msg = JSON.jsonDecode(message);
     switch (msg["_type"]) {
       case 'actors.Token':
@@ -38,19 +40,20 @@ void main() async {
         break;
       case 'actors.Ping':
         print("PING RECEIVED");
-        var packet = {
+        var pong = {
           "_type": "actors.Pong",
           "token": token
         };
-        channel.sink.add(JSON.jsonEncode(packet));
+        channel.sink.add(JSON.jsonEncode(pong));
         break;
       case 'actors.NameCheckResult':
-        if (msg["name"] == yourName)
+        if (msg["name"] == yourName) {
           nameIsValid = (msg["available"]) ? Maybe.True : Maybe.False;
+        }
         break;
       case 'actors.NameAssignResult':
         if (msg["name"] == yourName)
-          nameAssignResult = (msg["available"] == 'true') ? Maybe.True : Maybe.False;
+          nameAssignResult = (msg["available"]) ? Maybe.True : Maybe.False;
         break;
       case 'actors.NotifyClientsChanged':
         players = [];
@@ -79,7 +82,7 @@ void main() async {
       case 'actors.Err':
         break;
       default:
-        print(message);
+        print("Default case message: " + message);
     }
   });
 
@@ -136,7 +139,6 @@ class _HomePageState extends State<HomePage> {
               onChanged: (text) {
                 yourName = text;
                 checkName(yourName, token, channel);
-                print(nameIsValid);
                 if (nameIsValid == Maybe.True)  {
                   print("TRYING TO SHOW SNACKBAR");
                   Scaffold.of(context).showSnackBar(snackBar);
