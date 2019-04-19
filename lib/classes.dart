@@ -1,10 +1,12 @@
-class RoomStatus {
+enum Status { Waiting, Ready, Status }
+
+class Room {
   String name;
   String hostName;
   String roomId;
   List<ClientStatus> clientStatus;
 
-  RoomStatus(this.name, this.hostName, this.roomId, this.clientStatus);
+  Room(this.name, this.hostName, this.roomId, this.clientStatus);
 }
 
 class RoomBrief {
@@ -15,8 +17,6 @@ class RoomBrief {
 
   RoomBrief(this.name, this.hostToken, this.roomId, this.numClients);
 }
-
-enum Status { Waiting, Ready, Status }
 
 class ClientStatus {
   String name;

@@ -10,15 +10,16 @@ enum Maybe { True, False, Idk }
 IOWebSocketChannel channel;
 var token = "";
 var publicToken = "";
+var snackBarText = "";
 var showSnackBar = true;
 var yourName = "";
 var nameIsValid = Maybe.Idk;
 var nameAssignResult = Maybe.Idk;
 var players = [];
 List<RoomBrief> rooms = [];
-RoomBrief joinedRoom;
+RoomBrief joinedRoomBrief;
+Room joinedRoom;
 var isReady = false;
-const MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
 Game game;
 var turn; // the publicToken of whose turn it is
 var turnPhase;
@@ -39,6 +40,7 @@ void main() async {
       case 'actors.Token':
         token = msg["token"];
         publicToken = msg["publicToken"];
+        snackBarText = "Connected to server";
         showSnackBar = true;
         break;
       case 'actors.Ping':
@@ -65,10 +67,12 @@ void main() async {
         }
         break;
       case 'actors.CreatedRoom':
-        // TODO: add a snackBar showing that room creation was successful
+        snackBarText = "Room created";
+        showSnackBar = true;
         break;
       case 'actors.RoomCreationResult':
-        // I think this means room creation failed so we can toast that
+        snackBarText = "Room creation failed";
+        showSnackBar = true;
         break;
       case 'actors.NotifyRoomsChanged':
         rooms = msg["rooms"];
@@ -109,7 +113,8 @@ void main() async {
         turnPhase = msg["turnPhase"];
         break;
       case 'actors.NotifyNewArmies':
-        // TODO: toast "You got " + msg["newArmies"] + ' new armies.'
+        snackBarText = "You got " + msg["newArmies"] + "new armies.";
+        showSnackBar = true;
         break;
       case 'actors.NotifyClientResumeStatus':
         if (msg["name"])
@@ -119,7 +124,8 @@ void main() async {
           joinedRoom.roomId = msg["room"];
         break;
       case 'actors.Err':
-        // TODO: toast "Error from server"
+        snackBarText = "Error from server";
+        showSnackBar = true;
         break;
       default:
         print("Default case message: " + message);
@@ -152,8 +158,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final snackBar = SnackBar(
-    content: Text('Connected to server')
+  var snackBar = SnackBar(
+    content: Text(snackBarText)
   );
 
   @override                               
@@ -179,9 +185,8 @@ class _HomePageState extends State<HomePage> {
               onChanged: (text) {
                 yourName = text;
                 checkName(yourName, token, channel);
-                // BUG: nameIsValid is Maybe.Idk at this point instead of Maybe.True, even though it's being set correctly in our channel listen
-                if (nameIsValid == Maybe.True)  {
-                  print("TRYING TO SHOW SNACKBAR");
+                // TODO: check whether snackBar is showing up correctly
+                if (showSnackBar == true)  {
                   Scaffold.of(context).showSnackBar(snackBar);
                 }
               },
@@ -262,18 +267,20 @@ class _LobbyPageState extends State<LobbyPage> {
         itemBuilder: (context, index) {
           final room = rooms[index];
           return ListTile(
-            title: Text(room.roomName),
-            subtitle: (room.otherPlayers.isEmpty) ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
+            title: Text(room.name),
+            subtitle: Text(room.numClients.toString() + " players"), 
+            // ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
             trailing: Opacity(
-              opacity: joinedRoom == null || joinedRoom == room ? 1.0 : 0.0,
+              opacity: joinedRoom == null || joinedRoomBrief == room ? 1.0 : 0.0,
               child: FlatButton(
                 child: joinedRoom == null ? const Text('JOIN') : const Text('READY'),
                 onPressed: () {
-                  if (joinedRoom == null) { // Button shows JOIN
-                    joinedRoom = room;
-                    room.otherPlayers.add(yourName);
-                  } else if (!isReady && room.otherPlayers.length >= MIN_PLAYERS) { // Button shows READY
-                    // TODO: send stuff to server
+                  if (joinedRoomBrief != room) { // Button shows JOIN
+                    leaveRoom(joinedRoomBrief.roomId, token, channel);
+                    joinedRoomBrief = room;
+                    joinRoom(room.roomId, token, channel);
+                  } else if (!isReady && room.numClients >= 3 && room.numClients < 6) { // Button shows READY
+                    clientReady(room.roomId, token, channel);
                     isReady = true;
                   } else {
                     return null;
@@ -319,9 +326,8 @@ void _createRoomDialog(BuildContext context) {
           FlatButton(
               child: const Text('CREATE'),
               onPressed: () {
-                rooms.add(Room(tec.text, yourName, <String>[]));
+                createRoom(tec.text, token, channel);
                 Navigator.pop(context);
-                // TODO: handle creating room
               })
         ]
       );
