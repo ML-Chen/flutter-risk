@@ -6,9 +6,7 @@ import 'dart:convert' as JSON;
 
 enum Maybe { True, False, Idk }
 
-// final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
-// To find the IP of your server, type ipconfig in Command Prompt and Wireless LAN adapter Wi-Fi: IPv4 address
-final channel = IOWebSocketChannel.connect('ws://128.61.117.149:9000');
+IOWebSocketChannel channel;
 var token = "";
 var publicToken = "";
 var showSnackBar = false;
@@ -76,6 +74,12 @@ var subscription = channel.stream.listen((message) {
 });
 
 void main() {
+  // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi
+  try {
+    channel = IOWebSocketChannel.connect('ws://143.215.117.76:9000/ws');
+  } catch (e) {
+    print(e);
+  }
   runApp(new RiskApp());
 }
 
