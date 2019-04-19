@@ -31,8 +31,58 @@ void setName(String name, String token, IOWebSocketChannel channel) {
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
-void createRoom(String roomId) {
+// Request to list rooms
+void listRoom(String token, IOWebSocketChannel channel) {
+  var packet = {
+    "_type": "actors.ListRoom",
+    "token": token
+  };
+  channel.sink.add(JSON.jsonEncode(packet));
+}
 
+void createRoom(String roomName, String token, IOWebSocketChannel channel) {
+  var packet = {
+    "_type": "actors.CreateRoom",
+    "token": token,
+    "roomName": roomName
+  };
+  channel.sink.add(JSON.jsonEncode(packet));
+}
+
+void joinRoom(String roomId, String token, IOWebSocketChannel channel) {
+  var packet = {
+    "_type": "actors.CreateRoom",
+    "token": token,
+    "roomId": roomId
+  };
+  channel.sink.add(JSON.jsonEncode(packet));
+}
+
+void clientReady(String roomId, String token, IOWebSocketChannel channel) {
+  var packet = {
+    "_type": "actors.ClientReady",
+    "token": token,
+    "roomId": roomId
+  };
+  channel.sink.add(JSON.jsonEncode(packet));
+}
+
+void startGame(String roomId, String token, IOWebSocketChannel channel) {
+  var packet = {
+    "_type": "actors.StartGame",
+    "token": token,
+    "roomId": roomId
+  };
+  channel.sink.add(JSON.jsonEncode(packet));
+}
+
+void leaveRoom(String roomId, String token, IOWebSocketChannel channel) {
+  var packet = {
+    "_type": "actors.LeaveRoom",
+    "token": token,
+    "roomId": roomId
+  };
+  channel.sink.add(JSON.jsonEncode(packet));
 }
 
 // import 'package:json_annotation/json_annotation.dart';

@@ -69,15 +69,23 @@ void main() async {
         break;
       case 'actors.JoinedRoom':
         break;
+      case 'actors.NotifyClientsChanged':
+        break;
       case 'actors.NotifyRoomStatus':
         break;
       case 'actors.NotifyGameStarted':
         break;
       case 'actors.NotifyGameState':
         break;
+      case 'actors.NotifyGamePhaseStart':
+        break;
       case 'actors.SendMapResource':
         break;
       case 'actors.NotifyTurn':
+        break;
+      case 'actors.NotifyNewArmies':
+        break;
+      case 'actors.NotifyClientResumeStatus':
         break;
       case 'actors.Err':
         break;
@@ -139,11 +147,11 @@ class _HomePageState extends State<HomePage> {
               onChanged: (text) {
                 yourName = text;
                 checkName(yourName, token, channel);
+                // BUG: nameIsValid is Maybe.Idk at this point instead of Maybe.True, even though it's being set correctly in our channel listen
                 if (nameIsValid == Maybe.True)  {
                   print("TRYING TO SHOW SNACKBAR");
                   Scaffold.of(context).showSnackBar(snackBar);
                 }
-                // Server response: NameCheckResult, according to which nameIsValid is updated
               },
               // See https://flutter.dev/docs/cookbook/forms/validation – we'd need to change this from a TextField to a TextFormField
               // validator: (value) {
