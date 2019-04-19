@@ -2,45 +2,7 @@ import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert' as JSON;
 import 'dart:async';
-
-class Room {
-  String roomName;
-  String host;
-  List<String> otherPlayers;
-
-  Room(this.roomName, this.host, this.otherPlayers);
-}
-
-class Player {
-  String name;
-  int unitCount;
-  // ClientWithActor client;
-}
-
-class GameState {
-  List<Player> players;
-  GameMap map; // GameMap is called Map in our backend
-  // GamePhase gamePhase;
-
-  GameState(this.players, this.map);
-}
-
-class GameMap {
-  List<Territory> territories;
-  double interval; // of FiniteDuration type in backend
-  MapResource resource;
-
-  GameMap(this.territories, this.interval, this.resource);
-}
-
-class MapResource {
-  String viewBox;
-  List<String> territories;
-
-  MapResource(this.viewBox, this.territories);
-}
-
-// See also: Map, MapResource, etc.
+import 'classes.dart';
 
 void checkName(String name, String token, IOWebSocketChannel channel) {
   var packet = {

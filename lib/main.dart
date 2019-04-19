@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'packets.dart';
 import 'dart:convert' as JSON;
+import 'packets.dart';
+import 'classes.dart';
 
 enum Maybe { True, False, Idk }
 
@@ -13,11 +14,14 @@ var showSnackBar = true;
 var yourName = "";
 var nameIsValid = Maybe.Idk;
 var nameAssignResult = Maybe.Idk;
-var players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
-List<Room> rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
-var yourRoom;
+var players = []; // ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
+List<RoomBrief> rooms = []; // [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
+Room joinedRoom;
 var isReady = false;
 const MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
+Game game;
+var turn; // the publicToken of whose turn it is
+var turnPhase;
 
 void main() async {
   // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi
@@ -61,32 +65,61 @@ void main() async {
         }
         break;
       case 'actors.CreatedRoom':
+        // TODO: add a snackBar showing that room creation was successful
         break;
       case 'actors.RoomCreationResult':
+        // I think this means room creation failed so we can toast that
         break;
       case 'actors.NotifyRoomsChanged':
+        rooms = msg["rooms"];
         break;
       case 'actors.JoinedRoom':
+        if (msg["playerToken"] == publicToken)
+          joinedRoom.roomId = msg["roomId"];
         break;
       case 'actors.NotifyClientsChanged':
+        players = msg["players"];
         break;
       case 'actors.NotifyRoomStatus':
+        if (joinedRoom.roomId == msg["roomId"]) {
+          joinedRoom.name = msg["roomName"];
+          joinedRoom.clientStatus = msg["clientStatus"];
+        }
         break;
       case 'actors.NotifyGameStarted':
+        game.map.viewBox = null;
+        game.map.territories = null;
+        game.phase = 'Setup';
+        game.players = msg["players"];
+        game.territories = msg["map"]["territories"];
         break;
       case 'actors.NotifyGameState':
+        game.players = msg["players"];
+        game.territories = msg["map"]["territories"];
         break;
       case 'actors.NotifyGamePhaseStart':
+        game.phase = 'Realtime';
         break;
       case 'actors.SendMapResource':
+        game.map.viewBox = msg["viewBox"];
+        game.map.territories = msg["territories"];
         break;
       case 'actors.NotifyTurn':
+        turn = msg["publicToken"];
+        turnPhase = msg["turnPhase"];
         break;
       case 'actors.NotifyNewArmies':
+        // TODO: toast "You got " + msg["newArmies"] + ' new armies.'
         break;
       case 'actors.NotifyClientResumeStatus':
+        if (msg["name"])
+          yourName = msg["name"];
+          // TODO: consider refactoring yourName to displayName: { name: '', valid: null, committed: false }
+        if (msg["room"])
+          joinedRoom.roomId = msg["room"];
         break;
       case 'actors.Err':
+        // TODO: toast "Error from server"
         break;
       default:
         print("Default case message: " + message);
@@ -232,12 +265,12 @@ class _LobbyPageState extends State<LobbyPage> {
             title: Text(room.roomName),
             subtitle: (room.otherPlayers.isEmpty) ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
             trailing: Opacity(
-              opacity: yourRoom == null || yourRoom == room ? 1.0 : 0.0,
+              opacity: joinedRoom == null || joinedRoom == room ? 1.0 : 0.0,
               child: FlatButton(
-                child: yourRoom == null ? const Text('JOIN') : const Text('READY'),
+                child: joinedRoom == null ? const Text('JOIN') : const Text('READY'),
                 onPressed: () {
-                  if (yourRoom == null) { // Button shows JOIN
-                    yourRoom = room;
+                  if (joinedRoom == null) { // Button shows JOIN
+                    joinedRoom = room;
                     room.otherPlayers.add(yourName);
                   } else if (!isReady && room.otherPlayers.length >= MIN_PLAYERS) { // Button shows READY
                     // TODO: send stuff to server
