@@ -16,7 +16,7 @@ class RoomBrief {
   RoomBrief(this.name, this.hostToken, this.roomId, this.numClients);
 }
 
-enum Status { Waiting, Ready, Status };
+enum Status { Waiting, Ready, Status }
 
 class ClientStatus {
   String name;

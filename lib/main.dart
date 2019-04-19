@@ -14,9 +14,9 @@ var showSnackBar = true;
 var yourName = "";
 var nameIsValid = Maybe.Idk;
 var nameAssignResult = Maybe.Idk;
-var players = []; // ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
-List<RoomBrief> rooms = []; // [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
-Room joinedRoom;
+var players = [];
+List<RoomBrief> rooms = [];
+RoomBrief joinedRoom;
 var isReady = false;
 const MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
 Game game;
