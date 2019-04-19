@@ -1,4 +1,4 @@
-enum Status { Waiting, Ready, Status }
+enum Status { Waiting, Ready, Idk }
 
 class Room {
   String name;
@@ -16,6 +16,9 @@ class RoomBrief {
   int numClients;
 
   RoomBrief(this.name, this.hostToken, this.roomId, this.numClients);
+  String toString() {
+    return "Room(" + "name=" + this.name + " hostToken=" + this.hostToken + " roomId=" + this.roomId + " numClients=" + this.numClients.toString();
+  }
 }
 
 class ClientStatus {

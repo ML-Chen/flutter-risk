@@ -18,7 +18,7 @@ var nameAssignResult = Maybe.Idk;
 var players = [];
 List<RoomBrief> rooms = [];
 RoomBrief joinedRoomBrief;
-Room joinedRoom;
+Room joinedRoom = Room();
 var isReady = false;
 Game game;
 var turn; // the publicToken of whose turn it is
@@ -44,7 +44,6 @@ void main() async {
         showSnackBar = true;
         break;
       case 'actors.Ping':
-        print("PING RECEIVED");
         var pong = {
           "_type": "actors.Pong",
           "token": token
@@ -58,11 +57,11 @@ void main() async {
         break;
       case 'actors.NameAssignResult':
         if (msg["name"] == yourName)
-          nameAssignResult = (msg["available"]) ? Maybe.True : Maybe.False;
+          nameAssignResult = (msg["success"]) ? Maybe.True : Maybe.False;
         break;
       case 'actors.NotifyClientsChanged':
         players = [];
-        for (var clientBrief in msg["clientSeq"]) {
+        for (var clientBrief in msg["strings"]) {
           players.add(clientBrief["name"]);
         }
         break;
@@ -75,11 +74,20 @@ void main() async {
         showSnackBar = true;
         break;
       case 'actors.NotifyRoomsChanged':
-        rooms = msg["rooms"];
+        rooms = [];
+        for (var room in msg["rooms"]) {
+          rooms.add(RoomBrief(room["name"], room["hostToken"], room["roomId"], room["numClients"]));
+        }
         break;
       case 'actors.JoinedRoom':
-        if (msg["playerToken"] == publicToken)
-          joinedRoom.roomId = msg["roomId"];
+        if (msg["playerToken"] == publicToken) {
+          joinedRoom = Room(
+            msg["name"],
+            msg["hostToken"],
+            msg["roomId"],
+            msg["clientStatus"].map((clientStatus) => ClientStatus(clientStatus["name"], clientStatus["token"], clientStatus["publicToken"])));
+          joinedRoomBrief = RoomBrief(msg["name"], msg["hostToken"], msg["roomId"], msg["clientStatus"].length);
+        }
         break;
       case 'actors.NotifyClientsChanged':
         players = msg["players"];
@@ -88,6 +96,7 @@ void main() async {
         if (joinedRoom.roomId == msg["roomId"]) {
           joinedRoom.name = msg["roomName"];
           joinedRoom.clientStatus = msg["clientStatus"];
+          joinedRoomBrief.name = msg["roomName"];
         }
         break;
       case 'actors.NotifyGameStarted':
@@ -113,15 +122,21 @@ void main() async {
         turnPhase = msg["turnPhase"];
         break;
       case 'actors.NotifyNewArmies':
-        snackBarText = "You got " + msg["newArmies"] + "new armies.";
+        snackBarText = "You got $msg['newArmies'] new armies.";
         showSnackBar = true;
         break;
       case 'actors.NotifyClientResumeStatus':
         if (msg["name"])
           yourName = msg["name"];
           // TODO: consider refactoring yourName to displayName: { name: '', valid: null, committed: false }
-        if (msg["room"])
-          joinedRoom.roomId = msg["room"];
+        if (msg["room"]) {
+          if (joinedRoom == null) {
+            // TODO: I'm pretty unsure about what exactly the msg here should be
+            joinedRoom = Room(null, null, msg["room"], null);
+          } else {
+            joinedRoom.roomId = msg["room"];
+          }
+        }
         break;
       case 'actors.Err':
         snackBarText = "Error from server";
@@ -186,8 +201,9 @@ class _HomePageState extends State<HomePage> {
                 yourName = text;
                 checkName(yourName, token, channel);
                 // TODO: check whether snackBar is showing up correctly
-                if (showSnackBar == true)  {
-                  Scaffold.of(context).showSnackBar(snackBar);
+                if (showSnackBar)  {
+                  showSnackBar = false;
+                  // Scaffold.of(context).showSnackBar(snackBar);
                 }
               },
               // See https://flutter.dev/docs/cookbook/forms/validation – we'd need to change this from a TextField to a TextFormField
@@ -205,7 +221,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 if (nameIsValid == Maybe.Idk || nameIsValid == Maybe.False) return null;
                 setName(yourName, token, channel);
-                // TODO: go to lobby page only after NameAssignResult validation?
+                listRoom(token, channel);
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => LobbyPage())
