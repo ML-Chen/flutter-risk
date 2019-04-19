@@ -1,14 +1,99 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'packets.dart'
+import 'packets.dart';
+import 'dart:convert' as JSON;
 
-var _yourName = "Mic";
-var _players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
-List<Room> _rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
-final channel = IOWebSocketChannel.connect('ws://localhost:9000/ws');
+enum Maybe { True, False, Idk }
 
-void main() {
+IOWebSocketChannel channel;
+var token = "";
+var publicToken = "";
+var showSnackBar = true;
+var yourName = "";
+var nameIsValid = Maybe.Idk;
+var nameAssignResult = Maybe.Idk;
+var players = ["Mic", "Alice", "Bob", "Carol", "Dan", "Eve"];
+List<Room> rooms = [Room("Room1", "mwahaha", ["hehe", "lol", "jk"]), Room("Room2", "ya", ["whoa", "uh huh"])];
+var yourRoom;
+var isReady = false;
+const MIN_PLAYERS = 2; // minimum number of players to start a game, excluding the host
+
+void main() async {
+  // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi
+  try {
+    // channel = IOWebSocketChannel.connect('ws://143.215.117.76:9000/ws');
+    channel = IOWebSocketChannel.connect('ws://128.61.116.219:9000/ws');
+    print("Connected to server");
+  } catch (e) {
+    print("Exception when connecting to server: " + e);
+  }
+
+  var subscription = channel.stream.listen((message) {
+    print("Message received: " + message);
+    Map<String, dynamic> msg = JSON.jsonDecode(message);
+    switch (msg["_type"]) {
+      case 'actors.Token':
+        token = msg["token"];
+        publicToken = msg["publicToken"];
+        showSnackBar = true;
+        break;
+      case 'actors.Ping':
+        print("PING RECEIVED");
+        var pong = {
+          "_type": "actors.Pong",
+          "token": token
+        };
+        channel.sink.add(JSON.jsonEncode(pong));
+        break;
+      case 'actors.NameCheckResult':
+        if (msg["name"] == yourName) {
+          nameIsValid = (msg["available"]) ? Maybe.True : Maybe.False;
+        }
+        break;
+      case 'actors.NameAssignResult':
+        if (msg["name"] == yourName)
+          nameAssignResult = (msg["available"]) ? Maybe.True : Maybe.False;
+        break;
+      case 'actors.NotifyClientsChanged':
+        players = [];
+        for (var clientBrief in msg["clientSeq"]) {
+          players.add(clientBrief["name"]);
+        }
+        break;
+      case 'actors.CreatedRoom':
+        break;
+      case 'actors.RoomCreationResult':
+        break;
+      case 'actors.NotifyRoomsChanged':
+        break;
+      case 'actors.JoinedRoom':
+        break;
+      case 'actors.NotifyClientsChanged':
+        break;
+      case 'actors.NotifyRoomStatus':
+        break;
+      case 'actors.NotifyGameStarted':
+        break;
+      case 'actors.NotifyGameState':
+        break;
+      case 'actors.NotifyGamePhaseStart':
+        break;
+      case 'actors.SendMapResource':
+        break;
+      case 'actors.NotifyTurn':
+        break;
+      case 'actors.NotifyNewArmies':
+        break;
+      case 'actors.NotifyClientResumeStatus':
+        break;
+      case 'actors.Err':
+        break;
+      default:
+        print("Default case message: " + message);
+    }
+  });
+
   runApp(new RiskApp());
 }
 
@@ -23,14 +108,6 @@ class RiskApp extends StatelessWidget {
   }
 }
 
-class Room {
-  String roomName;
-  String host;
-  List<String> otherPlayers;
-
-  Room(this.roomName, this.host, this.otherPlayers);
-}
-
 final ThemeData kDefaultTheme = new ThemeData(
   primarySwatch: Colors.blue,
   accentColor: Colors.purpleAccent[400],
@@ -43,13 +120,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final tecYourName = TextEditingController();
-
-  @override
-  void dispose() {
-    tecYourName.dispose();
-    super.dispose();
-  }
+  final snackBar = SnackBar(
+    content: Text('Connected to server')
+  );
 
   @override                               
   Widget build(BuildContext context) {
@@ -68,18 +141,34 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 120.0),
             TextField(
-              controller: tecYourName,
               decoration: InputDecoration(
                 labelText: 'Enter Name'
-              )
+              ),
+              onChanged: (text) {
+                yourName = text;
+                checkName(yourName, token, channel);
+                // BUG: nameIsValid is Maybe.Idk at this point instead of Maybe.True, even though it's being set correctly in our channel listen
+                if (nameIsValid == Maybe.True)  {
+                  print("TRYING TO SHOW SNACKBAR");
+                  Scaffold.of(context).showSnackBar(snackBar);
+                }
+              },
+              // See https://flutter.dev/docs/cookbook/forms/validation – we'd need to change this from a TextField to a TextFormField
+              // validator: (value) {
+              //   if (value.isEmpty) {
+              //     return 'Please enter some text';
+              //   } else if (nameIsValid == Maybe.False) {
+              //     return 'That name is already taken';
+              //   }
+              // }
             ),
             SizedBox(height: 12.0), // spacer
-            // TODO: enable button only when name exists
-            // TODO: check name is not taken
             RaisedButton(
               child: Text('START'),
               onPressed: () {
-                _yourName = tecYourName.text;
+                if (nameIsValid == Maybe.Idk || nameIsValid == Maybe.False) return null;
+                setName(yourName, token, channel);
+                // TODO: go to lobby page only after NameAssignResult validation?
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => LobbyPage())
@@ -104,10 +193,10 @@ class _LobbyPageState extends State<LobbyPage> {
     return Scaffold(
       endDrawer: Drawer(
         child: ListView.builder(
-          itemCount: _players.length,
+          itemCount: players.length,
           itemBuilder: (context, index) {
-            final item = _players[index];
-            if (item == _yourName)
+            final item = players[index];
+            if (item == yourName)
               return ListTile(
                 title: Text(item),
                 subtitle: Text("(me)")
@@ -137,21 +226,32 @@ class _LobbyPageState extends State<LobbyPage> {
         ]
       ),
       body: ListView.builder(
-        itemCount: _rooms.length,
+        itemCount: rooms.length,
         itemBuilder: (context, index) {
-          final room = _rooms[index];
+          final room = rooms[index];
           return ListTile(
             title: Text(room.roomName),
             subtitle: (room.otherPlayers.isEmpty) ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
-            // TODO: join room logic
-            // TODO: show READY button after joining, and enable that after we have at least three(?) players
-            trailing: FlatButton(
-              child: const Text('JOIN'),
+            trailing: Opacity(
+              opacity: yourRoom == null || yourRoom == room ? 1.0 : 0.0,
+              child: FlatButton(
+                child: yourRoom == null ? const Text('JOIN') : const Text('READY'),
+                onPressed: () {
+                  if (yourRoom == null) { // Button shows JOIN
+                    yourRoom = room;
+                    room.otherPlayers.add(yourName);
+                  } else if (!isReady && room.otherPlayers.length >= MIN_PLAYERS) { // Button shows READY
+                    // TODO: send stuff to server
+                    isReady = true;
+                  } else {
+                    return null;
+                  }
+                }
+              )
             )
           );
         }
       )
-      // TODO: snackbar about connecting to server or whatever
     );
   }
 }
@@ -187,7 +287,7 @@ void _createRoomDialog(BuildContext context) {
           FlatButton(
               child: const Text('CREATE'),
               onPressed: () {
-                _rooms.add(Room(tec.text, _yourName, <String>[]));
+                rooms.add(Room(tec.text, yourName, <String>[]));
                 Navigator.pop(context);
                 // TODO: handle creating room
               })
@@ -205,4 +305,5 @@ https://flutter.dev/docs/cookbook/lists/mixed-list
 https://flutter.dev/docs/cookbook/forms/retrieve-input
 https://flutter.dev/docs/cookbook/networking/web-sockets
 https://www.didierboelens.com/2018/06/web-sockets---build-a-real-time-game/
+https://medium.com/flutter-community/reactive-programming-streams-bloc-6f0d2bd2d248
 */
