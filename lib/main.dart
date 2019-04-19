@@ -22,7 +22,6 @@ const MIN_PLAYERS = 2; // minimum number of players to start a game, excluding t
 void main() async {
   // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi
   try {
-    // channel = IOWebSocketChannel.connect('ws://143.215.117.76:9000/ws');
     channel = IOWebSocketChannel.connect('ws://128.61.116.219:9000/ws');
     print("Connected to server");
   } catch (e) {
