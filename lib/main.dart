@@ -17,12 +17,12 @@ var nameIsValid = Maybe.Idk;
 var nameAssignResult = Maybe.Idk;
 var players = [];
 List<RoomBrief> rooms = [];
-RoomBrief joinedRoomBrief;
-Room joinedRoom = Room();
+RoomBrief joinedRoomBrief = RoomBrief(null, null, null, null);
+Room joinedRoom = Room(null, null, null, null);
 var isReady = false;
-Game game;
-var turn; // the publicToken of whose turn it is
-var turnPhase;
+Game game = Game(null, null, null, null, null, null);
+var turn = ""; // the publicToken of whose turn it is
+var turnPhase = "";
 
 void main() async {
   // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi
