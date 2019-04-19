@@ -1,17 +1,8 @@
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'packets.dart';
 import 'dart:convert' as JSON;
-import 'main.dart';
 import 'dart:async';
-
-class Room {
-  String roomName;
-  String host;
-  List<String> otherPlayers;
-
-  Room(this.roomName, this.host, this.otherPlayers);
-}
+import 'classes.dart';
 
 void checkName(String name, String token, IOWebSocketChannel channel) {
   var packet = {
@@ -40,6 +31,26 @@ void listRoom(String token, IOWebSocketChannel channel) {
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
+class RoomStatus {
+  String roomName;
+  String roomId;
+  String clientStatus;
+}
+
+void roomStatusUpdate(RoomStatus roomStatus, String token, IOWebSocketChannel channel) {
+  // TODO: check if this is correct
+  var packet = {
+    "_type": "actors.RoomStatusUpdate",
+    "token": token,
+    "roomName": roomStatus.roomName,
+    "roomId": roomStatus.roomId,
+    "clientStatus": roomStatus.clientStatus
+  };
+  channel.sink.add(JSON.jsonEncode(packet));
+}
+
+// TODO: figure out why notifyClientResumeStatus() is in packets.js but not the backend
+
 void createRoom(String roomName, String token, IOWebSocketChannel channel) {
   var packet = {
     "_type": "actors.CreateRoom",
@@ -51,7 +62,16 @@ void createRoom(String roomName, String token, IOWebSocketChannel channel) {
 
 void joinRoom(String roomId, String token, IOWebSocketChannel channel) {
   var packet = {
-    "_type": "actors.CreateRoom",
+    "_type": "actors.JoinRoom",
+    "token": token,
+    "roomId": roomId
+  };
+  channel.sink.add(JSON.jsonEncode(packet));
+}
+
+void leaveRoom(String roomId, String token, IOWebSocketChannel channel) {
+  var packet = {
+    "_type": "actors.LeaveRoom",
     "token": token,
     "roomId": roomId
   };
@@ -76,14 +96,35 @@ void startGame(String roomId, String token, IOWebSocketChannel channel) {
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
-void leaveRoom(String roomId, String token, IOWebSocketChannel channel) {
+void placeArmy(int territoryId, String token, IOWebSocketChannel channel) {
   var packet = {
-    "_type": "actors.LeaveRoom",
+    "_type": "actors.PlaceArmy",
     "token": token,
-    "roomId": roomId
+    "territoryId": territoryId
   };
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
-// import 'package:json_annotation/json_annotation.dart';
+void attackTerritory(int fromTerritoryId, int toTerritoryId, int armyCount, String token, IOWebSocketChannel channel) {
+  var packet = {
+    "_type": "actors.AttackTerritory",
+    "token": token,
+    "fromTerritoryId": fromTerritoryId,
+    "toTerritoryId": toTerritoryId,
+    "armyCount": armyCount
+  };
+  channel.sink.add(JSON.jsonEncode(packet));
+}
+
+void moveArmy(int armyCount, int territoryFrom, int territoryTo, String token, IOWebSocketChannel channel) {
+  var packet = {
+    "_type": "actors.MoveArmy",
+    "token": token,
+    "fromTerritoryId": territoryFrom,
+    "toTerritoryId": territoryTo,
+    "armyCount": armyCount
+  };
+  channel.sink.add(JSON.jsonEncode(packet));
+}
+
 // https://flutter.dev/docs/development/data-and-backend/json
