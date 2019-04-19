@@ -17,7 +17,7 @@ class RoomBrief {
 
   RoomBrief(this.name, this.hostToken, this.roomId, this.numClients);
   String toString() {
-    return "Room(" + "name=" + this.name + " hostToken=" + this.hostToken + " roomId=" + this.roomId + " numClients=" + this.numClients.toString();
+    return "Room name=${this.name} hostToken=${this.hostToken} roomId=${this.roomId} numClients=${this.numClients.toString()}";
   }
 }
 

@@ -38,8 +38,9 @@ class RoomStatus {
 }
 
 void roomStatusUpdate(RoomStatus roomStatus, String token, IOWebSocketChannel channel) {
+  // TODO: check if this is correct
   var packet = {
-    "_type": "actors.NotifyRoomsChanged",
+    "_type": "actors.RoomStatusUpdate",
     "token": token,
     "roomName": roomStatus.roomName,
     "roomId": roomStatus.roomId,
@@ -61,7 +62,7 @@ void createRoom(String roomName, String token, IOWebSocketChannel channel) {
 
 void joinRoom(String roomId, String token, IOWebSocketChannel channel) {
   var packet = {
-    "_type": "actors.CreateRoom",
+    "_type": "actors.JoinRoom",
     "token": token,
     "roomId": roomId
   };
