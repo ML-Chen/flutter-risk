@@ -4,6 +4,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert' as JSON;
 import 'packets.dart';
 import 'classes.dart';
+import 'game.dart';
 
 enum Maybe { True, False, Idk }
 
@@ -21,7 +22,7 @@ RoomBrief joinedRoomBrief;
 // As of right now we're not really using joinedRoom for anything that we couldn't with joinedRoomBrief
 Room joinedRoom;
 var isReady = false;
-Game game;
+Game game = Game(MapResource("", []), "", [], [], "", "");
 var turn = ""; // the publicToken of whose turn it is
 var turnPhase = "";
 
@@ -245,6 +246,13 @@ class LobbyPage extends StatefulWidget {
 class _LobbyPageState extends State<LobbyPage> {
   @override
   Widget build(BuildContext context) {
+    if (game.phase != "") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => GamePage())
+      );
+    }
+
     return Scaffold(
       endDrawer: Drawer(
         child: ListView.builder(
