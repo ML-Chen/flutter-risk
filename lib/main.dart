@@ -19,7 +19,6 @@ var nameAssignResult = Maybe.Idk;
 var players = [];
 List<RoomBrief> rooms = [];
 RoomBrief joinedRoomBrief;
-// As of right now we're not really using joinedRoom for anything that we couldn't with joinedRoomBrief
 Room joinedRoom;
 var isReady = false;
 Game game = Game(MapResource("", []), "", [], [], "", "");
@@ -309,23 +308,32 @@ class _LobbyPageState extends State<LobbyPage> {
           final room = rooms[index];
           return ListTile(
             title: Text(room.name),
-            subtitle: Text(room.numClients.toString() + " players"), 
-            // ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
+            subtitle: joinedRoomBrief.roomId == room.roomId ?
+              Text('👑${joinedRoom.hostName}, ${joinedRoom.clientStatus.where((client) => client.publicToken != publicToken).map((client) => client.name).join(', ')}') :
+              room.numClients == 1 ?
+                Text(room.numClients.toString() + " player") :
+                Text(room.numClients.toString() + " players"),
             trailing: Opacity(
-              opacity: (joinedRoom == null || joinedRoomBrief == room) ? 1.0 : 0.0,
+              opacity: (joinedRoomBrief == null || joinedRoomBrief == room) ? 1.0 : 0.0,
               child: FlatButton(
-                // TODO: if you are the host, show START
-                child: joinedRoomBrief == null || joinedRoomBrief.roomId != room.roomId ? const Text('JOIN') : const Text('READY'),
+                child: joinedRoomBrief.hostToken == publicToken ?
+                  const Text('START') :
+                  joinedRoomBrief == null || joinedRoomBrief.roomId != room.roomId ? const Text('JOIN') : const Text('READY'),
                 onPressed: () {
-                  if (joinedRoomBrief == null || joinedRoomBrief.roomId != room.roomId) {
+                  if (room.hostToken == publicToken && room.numClients >= 3) {
+                    startGame(room.roomId, token, channel);
+                    print('requested start game for room $room $token $channel');
+                  } else if (joinedRoomBrief == null || joinedRoomBrief.roomId != room.roomId) {
                     if (joinedRoomBrief != null)
                       leaveRoom(joinedRoomBrief.roomId, token, channel);
                     joinedRoomBrief = room;
-                    print('requested join room $room.roomId $token $channel');
+                    this.joinedRoomBrief = room;
                     joinRoom(room.roomId, token, channel);
-                  } else if (!isReady && room.numClients >= 3 && room.numClients <= 6) { // Button shows READY
+                    print('requested join room $room $token $channel');
+                  } else if (!isReady && room.numClients >= 3 && room.numClients <= 6) {
                   // TODO: READY button looks enabled even when there aren't enough players
                     clientReady(room.roomId, token, channel);
+                    this.isReady = true;
                     isReady = true;
                   } else {
                     return null;
@@ -341,7 +349,6 @@ class _LobbyPageState extends State<LobbyPage> {
 }
 
 void _createRoomDialog(BuildContext context) {
-  String newRoomName;
   final tec = TextEditingController();
 
   showDialog<String>(
