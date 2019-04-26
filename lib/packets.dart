@@ -116,7 +116,7 @@ void attackTerritory(int fromTerritoryId, int toTerritoryId, int armyCount, Stri
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
-void moveArmy(int armyCount, int territoryFrom, int territoryTo, String token, IOWebSocketChannel channel) {
+void moveArmy(int territoryFrom, int territoryTo, int armyCount, String token, IOWebSocketChannel channel) {
   var packet = {
     "_type": "actors.MoveArmy",
     "token": token,
