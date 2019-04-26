@@ -245,6 +245,20 @@ class LobbyPage extends StatefulWidget {
 }
 
 class _LobbyPageState extends State<LobbyPage> {
+  var players = [];
+  List<RoomBrief> rooms = [];
+  RoomBrief joinedRoomBrief;
+  Room joinedRoom;
+  var isReady = false;
+
+  _LobbyPageState() {
+    this.players = players;
+    this.rooms = rooms;
+    this.joinedRoomBrief = joinedRoomBrief;
+    this.joinedRoom = joinedRoom;
+    this.isReady = isReady;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (game.phase != "") {
