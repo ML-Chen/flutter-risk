@@ -21,6 +21,12 @@ class RoomBrief {
   }
 }
 
+class RoomStatus {
+  String roomName;
+  String roomId;
+  String clientStatus;
+}
+
 class ClientStatus {
   String name;
   Status status;
