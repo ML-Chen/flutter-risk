@@ -4,6 +4,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert' as JSON;
 import 'packets.dart';
 import 'classes.dart';
+import 'game.dart';
 
 enum Maybe { True, False, Idk }
 
@@ -21,14 +22,14 @@ RoomBrief joinedRoomBrief;
 // As of right now we're not really using joinedRoom for anything that we couldn't with joinedRoomBrief
 Room joinedRoom;
 var isReady = false;
-Game game;
+Game game = Game(MapResource("", []), "", [], [], "", "");
 var turn = ""; // the publicToken of whose turn it is
 var turnPhase = "";
 
 void main() async {
-  // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi
+  // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi IPv4 Address
   try {
-    channel = IOWebSocketChannel.connect('ws://128.61.116.219:9000/ws');
+    channel = IOWebSocketChannel.connect('ws://128.61.118.238:9000/ws');
     print("Connected to server");
   } catch (e) {
     print("Exception when connecting to server: " + e);
@@ -153,6 +154,7 @@ void main() async {
 }
 
 class RiskApp extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -245,6 +247,13 @@ class LobbyPage extends StatefulWidget {
 class _LobbyPageState extends State<LobbyPage> {
   @override
   Widget build(BuildContext context) {
+    if (game.phase != "") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => GamePage())
+      );
+    }
+
     return Scaffold(
       endDrawer: Drawer(
         child: ListView.builder(
@@ -294,13 +303,13 @@ class _LobbyPageState extends State<LobbyPage> {
                 // TODO: if you are the host, show START
                 child: joinedRoomBrief == null || joinedRoomBrief.roomId != room.roomId ? const Text('JOIN') : const Text('READY'),
                 onPressed: () {
-                  if (joinedRoomBrief.roomId != room.roomId) { // Button shows JOIN
+                  if (joinedRoomBrief == null || joinedRoomBrief.roomId != room.roomId) {
                     if (joinedRoomBrief != null)
                       leaveRoom(joinedRoomBrief.roomId, token, channel);
                     joinedRoomBrief = room;
                     print('requested join room $room.roomId $token $channel');
                     joinRoom(room.roomId, token, channel);
-                  } else if (!isReady && room.numClients >= 3 && room.numClients < 6) { // Button shows READY
+                  } else if (!isReady && room.numClients >= 3 && room.numClients <= 6) { // Button shows READY
                   // TODO: READY button looks enabled even when there aren't enough players
                     clientReady(room.roomId, token, channel);
                     isReady = true;

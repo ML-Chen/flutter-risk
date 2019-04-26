@@ -1,7 +1,5 @@
 import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert' as JSON;
-import 'dart:async';
 import 'classes.dart';
 
 void checkName(String name, String token, IOWebSocketChannel channel) {
@@ -29,12 +27,6 @@ void listRoom(String token, IOWebSocketChannel channel) {
     "token": token
   };
   channel.sink.add(JSON.jsonEncode(packet));
-}
-
-class RoomStatus {
-  String roomName;
-  String roomId;
-  String clientStatus;
 }
 
 void roomStatusUpdate(RoomStatus roomStatus, String token, IOWebSocketChannel channel) {
@@ -116,7 +108,7 @@ void attackTerritory(int fromTerritoryId, int toTerritoryId, int armyCount, Stri
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
-void moveArmy(int armyCount, int territoryFrom, int territoryTo, String token, IOWebSocketChannel channel) {
+void moveArmy(int territoryFrom, int territoryTo, int armyCount, String token, IOWebSocketChannel channel) {
   var packet = {
     "_type": "actors.MoveArmy",
     "token": token,
