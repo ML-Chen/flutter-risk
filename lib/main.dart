@@ -72,16 +72,16 @@ void main() async {
         break;
       case 'actors.JoinedRoom':
         if (msg["playerToken"] == publicToken) {
-          joinedRoom = Room(
-              msg["name"],
-              msg["hostToken"],
-              msg["roomId"],
-              msg["clientStatus"].map((clientStatus) => ClientStatus(
-                  clientStatus["name"],
-                  clientStatus["token"],
-                  clientStatus["publicToken"])));
-          joinedRoomBrief = RoomBrief(msg["name"], msg["hostToken"],
-              msg["roomId"], msg["clientStatus"].length);
+          // joinedRoom = Room(
+          //     msg["name"],
+          //     msg["hostToken"],
+          //     msg["roomId"],
+          //     msg["clientStatus"].map((clientStatus) => ClientStatus(
+          //         clientStatus["name"],
+          //         clientStatus["token"],
+          //         clientStatus["publicToken"])));
+          joinedRoom = Room('', '', msg["token"], []);
+          joinedRoomBrief = RoomBrief('', '', msg["token"], 0);
         }
         break;
       case 'actors.NotifyClientsChanged':
@@ -223,7 +223,6 @@ class _LobbyPageState extends State<LobbyPage> {
   @override
   void initState() {
     streamController.stream.listen((message) {
-      print("Lobby received: " + message);
       Map<String, dynamic> msg = JSON.jsonDecode(message);
       setState(() {});
       switch (msg["_type"]) {
@@ -249,72 +248,72 @@ class _LobbyPageState extends State<LobbyPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (game.phase != "") {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => GamePage()));
-    }
-    return Scaffold(
-        endDrawer: Drawer(
-            child: ListView.builder(
-                itemCount: players.length,
+    return game.phase == ""
+        ? Scaffold(
+            endDrawer: Drawer(
+                child: ListView.builder(
+                    itemCount: players.length,
+                    itemBuilder: (context, index) {
+                      final item = players[index];
+                      if (item == yourName)
+                        return ListTile(
+                            title: Text(item), subtitle: Text("(me)"));
+                      else
+                        return ListTile(title: Text(item));
+                    })),
+            appBar: AppBar(title: Text('Rooms'), actions: <Widget>[
+              Builder(
+                  builder: (context) => IconButton(
+                      icon: Icon(Icons.people),
+                      onPressed: () => Scaffold.of(context).openEndDrawer(),
+                      tooltip: 'Players')),
+              IconButton(
+                  icon: Icon(Icons.add),
+                  tooltip: 'Create Room',
+                  onPressed: () => _createRoomDialog(context))
+            ]),
+            body: ListView.builder(
+                itemCount: rooms.length,
                 itemBuilder: (context, index) {
-                  final item = players[index];
-                  if (item == yourName)
-                    return ListTile(title: Text(item), subtitle: Text("(me)"));
-                  else
-                    return ListTile(title: Text(item));
-                })),
-        appBar: AppBar(title: Text('Rooms'), actions: <Widget>[
-          Builder(
-              builder: (context) => IconButton(
-                  icon: Icon(Icons.people),
-                  onPressed: () => Scaffold.of(context).openEndDrawer(),
-                  tooltip: 'Players')),
-          IconButton(
-              icon: Icon(Icons.add),
-              tooltip: 'Create Room',
-              onPressed: () => _createRoomDialog(context))
-        ]),
-        body: ListView.builder(
-            itemCount: rooms.length,
-            itemBuilder: (context, index) {
-              final room = rooms[index];
-              return ListTile(
-                  title: Text(room.name),
-                  subtitle: Text(room.numClients.toString() + " players"),
-                  // ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
-                  trailing: Opacity(
-                      opacity: (joinedRoom == null || joinedRoomBrief == room)
-                          ? 1.0
-                          : 0.0,
-                      child: FlatButton(
-                          // TODO: if you are the host, show START
-                          child: joinedRoomBrief == null ||
-                                  joinedRoomBrief.roomId != room.roomId
-                              ? const Text('JOIN')
-                              : const Text('READY'),
-                          onPressed: () {
-                            if (joinedRoomBrief == null ||
-                                joinedRoomBrief.roomId != room.roomId) {
-                              if (joinedRoomBrief != null)
-                                leaveRoom(
-                                    joinedRoomBrief.roomId, token, channel);
-                              joinedRoomBrief = room;
-                              print(
-                                  'requested join room $room.roomId $token $channel');
-                              joinRoom(room.roomId, token, channel);
-                            } else if (!isReady &&
-                                room.numClients >= 3 &&
-                                room.numClients <= 6) {
-                              // Button shows READY
-                              // TODO: READY button looks enabled even when there aren't enough players
-                              clientReady(room.roomId, token, channel);
-                              isReady = true;
-                            } else {
-                              return null;
-                            }
-                          })));
-            }));
+                  final room = rooms[index];
+                  return ListTile(
+                      title: Text(room.name),
+                      subtitle: Text(room.numClients.toString() + " players"),
+                      // ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
+                      trailing: Opacity(
+                          opacity:
+                              (joinedRoom == null || joinedRoomBrief == room)
+                                  ? 1.0
+                                  : 0.0,
+                          child: FlatButton(
+                              // TODO: if you are the host, show START
+                              child: joinedRoomBrief == null ||
+                                      joinedRoomBrief.roomId != room.roomId
+                                  ? const Text('JOIN')
+                                  : const Text('READY'),
+                              onPressed: () {
+                                if (joinedRoomBrief == null ||
+                                    joinedRoomBrief.roomId != room.roomId) {
+                                  if (joinedRoomBrief != null)
+                                    leaveRoom(
+                                        joinedRoomBrief.roomId, token, channel);
+                                  joinedRoomBrief = room;
+                                  print(
+                                      'requested join room $room.roomId $token $channel');
+                                  joinRoom(room.roomId, token, channel);
+                                } else if (!isReady &&
+                                    room.numClients >= 3 &&
+                                    room.numClients <= 6) {
+                                  // Button shows READY
+                                  // TODO: READY button looks enabled even when there aren't enough players
+                                  clientReady(room.roomId, token, channel);
+                                  isReady = true;
+                                } else {
+                                  return null;
+                                }
+                              })));
+                }))
+        : GamePage();
   }
 }
 
