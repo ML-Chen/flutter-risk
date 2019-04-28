@@ -29,7 +29,7 @@ var turn = ""; // the publicToken of whose turn it is
 var turnPhase = "";
 
 final StreamController<String> streamController =
-    new StreamController<String>();
+    new StreamController<String>.broadcast();
 
 void main() async {
   // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi IPv4 Address
