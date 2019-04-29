@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert' as JSON;
 import 'packets.dart';
 import 'classes.dart';
@@ -87,39 +86,8 @@ void main() async {
       case 'actors.NotifyClientsChanged':
         players = msg["players"];
         break;
-      // TODO: not sure what NotifyRoomStatus is
       case 'actors.NotifyRoomStatus':
-        // if (joinedRoom.roomId == msg["roomId"]) {
-        joinedRoom.name = msg["roomName"];
-        joinedRoom.clientStatus = msg["clientStatus"];
-        joinedRoomBrief.name = msg["roomName"];
-        // }
-        break;
-      case 'actors.NotifyGameStarted':
-        game.map.viewBox = null;
-        game.map.territories = null;
-        game.phase = 'Setup';
-        game.players = msg["players"];
-        game.territories = msg["map"]["territories"];
-        break;
-      case 'actors.NotifyGameState':
-        game.players = msg["players"];
-        game.territories = msg["map"]["territories"];
-        break;
-      case 'actors.NotifyGamePhaseStart':
-        game.phase = 'Realtime';
-        break;
-      case 'actors.SendMapResource':
-        game.map.viewBox = msg["viewBox"];
-        game.map.territories = msg["territories"];
-        break;
-      case 'actors.NotifyTurn':
-        turn = msg["publicToken"];
-        turnPhase = msg["turnPhase"];
-        break;
-      case 'actors.NotifyNewArmies':
-        snackBarText = "You got $msg['newArmies'] new armies.";
-        showSnackBar = true;
+        //Not essential on mobile
         break;
       case 'actors.NotifyClientResumeStatus':
         if (msg["name"]) yourName = msg["name"];
@@ -281,16 +249,15 @@ class _LobbyPageState extends State<LobbyPage> {
                       subtitle: Text(room.numClients.toString() + " players"),
                       // ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
                       trailing: Opacity(
-                          opacity:
-                              (joinedRoom == null || joinedRoomBrief == room)
-                                  ? 1.0
-                                  : 0.0,
+                          opacity: 1.0,
                           child: FlatButton(
                               // TODO: if you are the host, show START
                               child: joinedRoomBrief == null ||
                                       joinedRoomBrief.roomId != room.roomId
                                   ? const Text('JOIN')
-                                  : const Text('READY'),
+                                  : ((!isReady)
+                                      ? const Text('READY')
+                                      : const Text('Waiting')),
                               onPressed: () {
                                 if (joinedRoomBrief == null ||
                                     joinedRoomBrief.roomId != room.roomId) {

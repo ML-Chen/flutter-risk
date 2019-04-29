@@ -20,7 +20,6 @@ void listRoom(String token, IOWebSocketChannel channel) {
 
 void roomStatusUpdate(
     RoomStatus roomStatus, String token, IOWebSocketChannel channel) {
-  // TODO: check if this is correct
   var packet = {
     "_type": "actors.RoomStatusUpdate",
     "token": token,
@@ -30,8 +29,6 @@ void roomStatusUpdate(
   };
   channel.sink.add(JSON.jsonEncode(packet));
 }
-
-// TODO: figure out why notifyClientResumeStatus() is in packets.js but not the backend
 
 void createRoom(String roomName, String token, IOWebSocketChannel channel) {
   var packet = {
@@ -59,7 +56,6 @@ void clientReady(String roomId, String token, IOWebSocketChannel channel) {
     "roomId": roomId,
     "ready": true
   };
-  print("doing this thing");
   channel.sink.add(JSON.jsonEncode(packet));
 }
 

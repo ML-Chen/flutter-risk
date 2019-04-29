@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'main.dart';
+import 'dart:convert' as JSON;
 import 'packets.dart';
 import 'classes.dart';
 
@@ -35,6 +36,65 @@ class _GamePageState extends State<GamePage> {
     fromTerritory = null;
     toTerritory = null;
     armyCount = 0;
+  }
+
+  @override
+  void initState() {
+    streamController.stream.listen((message) {
+      Map<String, dynamic> msg = JSON.jsonDecode(message);
+      setState(() {});
+      switch (msg["_type"]) {
+        case 'actors.NotifyGameStarted':
+          game.map.viewBox = null;
+          game.map.territories = null;
+          game.phase = 'Setup';
+          List<dynamic> temp = msg["state"]["players"];
+          for (dynamic obj in temp) {
+            Player tempPlayer = new Player();
+            tempPlayer.name = obj["name"];
+            tempPlayer.unitCount = obj["unitCount"];
+            game.players.add(tempPlayer);
+          }
+          temp = msg["state"]["map"]["territories"];
+          for (dynamic obj in temp) {
+            Territory tempTerritory = new Territory(
+                obj["armies"], obj["ownerToken"], obj["neighbors"], obj["id"]);
+            game.territories.add(tempTerritory);
+          }
+          break;
+        case 'actors.NotifyGameState':
+          List<dynamic> temp = msg["state"]["players"];
+          for (dynamic obj in temp) {
+            Player tempPlayer = new Player();
+            tempPlayer.name = obj["name"];
+            tempPlayer.unitCount = obj["unitCount"];
+            game.players.add(tempPlayer);
+          }
+          temp = msg["state"]["map"]["territories"];
+          for (dynamic obj in temp) {
+            Territory tempTerritory = new Territory(
+                obj["armies"], obj["ownerToken"], obj["neighbors"], obj["id"]);
+            game.territories.add(tempTerritory);
+          }
+          break;
+        case 'actors.NotifyGamePhaseStart':
+          game.phase = 'Realtime';
+          break;
+        case 'actors.SendMapResource':
+          game.map.viewBox = msg["viewBox"];
+          game.map.territories = msg["territories"];
+          break;
+        case 'actors.NotifyTurn':
+          turn = msg["publicToken"];
+          turnPhase = msg["turnPhase"];
+          break;
+        case 'actors.NotifyNewArmies':
+          snackBarText = "You got $msg['newArmies'] new armies.";
+          showSnackBar = true;
+          break;
+      }
+    });
+    super.initState();
   }
 
   @override
