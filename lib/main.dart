@@ -50,6 +50,25 @@ void main() async {
         snackBarText = "Connected to server";
         showSnackBar = true;
         break;
+      case 'actors.NotifyGameStarted':
+        game.phase = 'Setup';
+        game.map.viewBox = null;
+        game.map.territories = null;
+        game.phase = 'Setup';
+        List<dynamic> temp = msg["state"]["players"];
+        for (dynamic obj in temp) {
+          Player tempPlayer = new Player();
+          tempPlayer.name = obj["name"];
+          tempPlayer.unitCount = obj["unitCount"];
+          game.players.add(tempPlayer);
+        }
+        temp = msg["state"]["map"]["territories"];
+        for (dynamic obj in temp) {
+          Territory tempTerritory = new Territory(
+              obj["armies"], obj["ownerToken"], obj["neighbors"], obj["id"]);
+          game.territories.add(tempTerritory);
+        }
+        break;
       case 'actors.Ping':
         var pong = {"_type": "actors.Pong", "token": token};
         channel.sink.add(JSON.jsonEncode(pong));
@@ -71,14 +90,6 @@ void main() async {
         break;
       case 'actors.JoinedRoom':
         if (msg["playerToken"] == publicToken) {
-          // joinedRoom = Room(
-          //     msg["name"],
-          //     msg["hostToken"],
-          //     msg["roomId"],
-          //     msg["clientStatus"].map((clientStatus) => ClientStatus(
-          //         clientStatus["name"],
-          //         clientStatus["token"],
-          //         clientStatus["publicToken"])));
           joinedRoom = Room('', '', msg["token"], []);
           joinedRoomBrief = RoomBrief('', '', msg["token"], 0);
         }
@@ -87,6 +98,11 @@ void main() async {
         players = msg["players"];
         break;
       case 'actors.NotifyRoomStatus':
+        List<ClientStatus> temp;
+        msg["roomStatus"]["clientStatus"].map((clientStatus) => temp.add(
+            ClientStatus(clientStatus["name"], clientStatus["publicToken"])));
+        joinedRoom = Room(msg["roomStatus"]["name"],
+            msg["roomStatus"]["hostName"], msg["roomStatus"]["roomId"], temp);
         //Not essential on mobile
         break;
       case 'actors.NotifyClientResumeStatus':
