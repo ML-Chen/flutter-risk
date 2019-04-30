@@ -32,7 +32,7 @@ class ClientStatus {
   Status status;
   String publicToken;
 
-  ClientStatus(this.name, this.status, this.publicToken);
+  ClientStatus(this.name, this.publicToken);
 }
 
 class Player {
@@ -50,7 +50,8 @@ class Game {
   String turn;
   String turnPhase;
 
-  Game(this.map, this.phase, this.players, this.territories, this.turn, this.turnPhase);
+  Game(this.map, this.phase, this.players, this.territories, this.turn,
+      this.turnPhase);
 }
 
 class Territory {

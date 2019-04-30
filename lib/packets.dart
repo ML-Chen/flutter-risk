@@ -3,34 +3,23 @@ import 'dart:convert' as JSON;
 import 'classes.dart';
 
 void checkName(String name, String token, IOWebSocketChannel channel) {
-  var packet = {
-    "_type": "actors.CheckName",
-    "token": token,
-    "name": name
-  };
+  var packet = {"_type": "actors.CheckName", "token": token, "name": name};
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
 void setName(String name, String token, IOWebSocketChannel channel) {
-  var packet = {
-    "_type": "actors.AssignName",
-    "token": token,
-    "name": name
-  };
+  var packet = {"_type": "actors.AssignName", "token": token, "name": name};
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
 // Request to list rooms
 void listRoom(String token, IOWebSocketChannel channel) {
-  var packet = {
-    "_type": "actors.ListRoom",
-    "token": token
-  };
+  var packet = {"_type": "actors.ListRoom", "token": token};
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
-void roomStatusUpdate(RoomStatus roomStatus, String token, IOWebSocketChannel channel) {
-  // TODO: check if this is correct
+void roomStatusUpdate(
+    RoomStatus roomStatus, String token, IOWebSocketChannel channel) {
   var packet = {
     "_type": "actors.RoomStatusUpdate",
     "token": token,
@@ -40,8 +29,6 @@ void roomStatusUpdate(RoomStatus roomStatus, String token, IOWebSocketChannel ch
   };
   channel.sink.add(JSON.jsonEncode(packet));
 }
-
-// TODO: figure out why notifyClientResumeStatus() is in packets.js but not the backend
 
 void createRoom(String roomName, String token, IOWebSocketChannel channel) {
   var packet = {
@@ -53,20 +40,12 @@ void createRoom(String roomName, String token, IOWebSocketChannel channel) {
 }
 
 void joinRoom(String roomId, String token, IOWebSocketChannel channel) {
-  var packet = {
-    "_type": "actors.JoinRoom",
-    "token": token,
-    "roomId": roomId
-  };
+  var packet = {"_type": "actors.JoinRoom", "token": token, "roomId": roomId};
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
 void leaveRoom(String roomId, String token, IOWebSocketChannel channel) {
-  var packet = {
-    "_type": "actors.LeaveRoom",
-    "token": token,
-    "roomId": roomId
-  };
+  var packet = {"_type": "actors.LeaveRoom", "token": token, "roomId": roomId};
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
@@ -74,17 +53,14 @@ void clientReady(String roomId, String token, IOWebSocketChannel channel) {
   var packet = {
     "_type": "actors.ClientReady",
     "token": token,
-    "roomId": roomId
+    "roomId": roomId,
+    "ready": true
   };
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
 void startGame(String roomId, String token, IOWebSocketChannel channel) {
-  var packet = {
-    "_type": "actors.StartGame",
-    "token": token,
-    "roomId": roomId
-  };
+  var packet = {"_type": "actors.StartGame", "token": token, "roomId": roomId};
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
@@ -97,7 +73,8 @@ void placeArmy(int territoryId, String token, IOWebSocketChannel channel) {
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
-void attackTerritory(int fromTerritoryId, int toTerritoryId, int armyCount, String token, IOWebSocketChannel channel) {
+void attackTerritory(int fromTerritoryId, int toTerritoryId, int armyCount,
+    String token, IOWebSocketChannel channel) {
   var packet = {
     "_type": "actors.AttackTerritory",
     "token": token,
@@ -108,7 +85,8 @@ void attackTerritory(int fromTerritoryId, int toTerritoryId, int armyCount, Stri
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
-void moveArmy(int territoryFrom, int territoryTo, int armyCount, String token, IOWebSocketChannel channel) {
+void moveArmy(int territoryFrom, int territoryTo, int armyCount, String token,
+    IOWebSocketChannel channel) {
   var packet = {
     "_type": "actors.MoveArmy",
     "token": token,
