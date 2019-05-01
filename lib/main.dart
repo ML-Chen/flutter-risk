@@ -20,7 +20,6 @@ var nameAssignResult = Maybe.Idk;
 var players = [];
 List<RoomBrief> rooms = [];
 RoomBrief joinedRoomBrief;
-// As of right now we're not really using joinedRoom for anything that we couldn't with joinedRoomBrief
 Room joinedRoom;
 var isReady = false;
 Game game = Game(MapResource("", []), "", [], [], "", "");
@@ -33,7 +32,7 @@ final StreamController<String> streamController =
 void main() async {
   // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi IPv4 Address
   try {
-    channel = IOWebSocketChannel.connect('ws://143.215.117.76:9000/ws');
+    channel = IOWebSocketChannel.connect('ws://128.61.122.96:9000/ws');
     print("Connected to server");
   } catch (e) {
     print("Exception when connecting to server: " + e);
@@ -65,7 +64,7 @@ void main() async {
         temp = msg["state"]["map"]["territories"];
         for (dynamic obj in temp) {
           Territory tempTerritory = new Territory(
-              obj["armies"], obj["ownerToken"], obj["neighbors"], obj["id"]);
+              obj["armies"], obj["ownerToken"], obj["neighbours"], obj["id"]);
           game.territories.add(tempTerritory);
         }
         break;
@@ -156,13 +155,16 @@ class _HomePageState extends State<HomePage> {
             child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 children: <Widget>[
-          SizedBox(height: 80.0),
+          SizedBox(height: 40.0),
           Column(children: <Widget>[
             // Image.asset('assets/login_icon.png'),
-            SizedBox(height: 20.0),
-            Text('RISC!')
+            SizedBox(height: 40.0),
+            Text(
+                'RISC!',
+                style: DefaultTextStyle.of(context).style.apply(fontSizeFactor: 2)
+            )
           ]),
-          SizedBox(height: 120.0),
+          SizedBox(height: 40.0),
           TextField(
             decoration: InputDecoration(labelText: 'Enter Name'),
             onChanged: (text) {
@@ -284,15 +286,14 @@ class _LobbyPageState extends State<LobbyPage> {
                                   print(
                                       'requested join room $room.roomId $token $channel');
                                   joinRoom(room.roomId, token, channel);
-                                } else if (!isReady &&
-                                    room.numClients >= 3 &&
-                                    room.numClients <= 6) {
-                                  // Button shows READY
-                                  // TODO: READY button looks enabled even when there aren't enough players
-                                  clientReady(room.roomId, token, channel);
-                                  isReady = true;
                                 } else {
-                                  return null;
+                                  if (room.hostToken == publicToken)
+                                    startGame(room.roomId, token, channel);
+                                  if (!isReady) {
+                                    // TODO: READY button looks enabled even when there aren't enough players
+                                    clientReady(room.roomId, token, channel);
+                                    isReady = true;
+                                  }
                                 }
                               })));
                 }))
@@ -301,7 +302,6 @@ class _LobbyPageState extends State<LobbyPage> {
 }
 
 void _createRoomDialog(BuildContext context) {
-  String newRoomName;
   final tec = TextEditingController();
 
   showDialog<String>(

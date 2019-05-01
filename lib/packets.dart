@@ -64,35 +64,50 @@ void startGame(String roomId, String token, IOWebSocketChannel channel) {
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
-void placeArmy(int territoryId, String token, IOWebSocketChannel channel) {
+void placeArmy(int territoryId, String gameId, String token, IOWebSocketChannel channel) {
   var packet = {
-    "_type": "actors.PlaceArmy",
+    "_type": "actors.ForwardToGame",
     "token": token,
-    "territoryId": territoryId
+    "gameId": gameId, // room id of joined room
+    "msg": {
+      "_type": "actors.PlaceArmy",
+      "token": token,
+      "territoryId": territoryId
+    }
   };
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
-void attackTerritory(int fromTerritoryId, int toTerritoryId, int armyCount,
+void attackTerritory(int fromTerritoryId, int toTerritoryId, int armyCount, String gameId,
     String token, IOWebSocketChannel channel) {
   var packet = {
-    "_type": "actors.AttackTerritory",
+    "_type": "actors.ForwardToGame",
     "token": token,
-    "fromTerritoryId": fromTerritoryId,
-    "toTerritoryId": toTerritoryId,
-    "armyCount": armyCount
+    "gameId": gameId,
+    "msg": {
+      "_type": "actors.AttackTerritory",
+      "token": token,
+      "fromTerritoryId": fromTerritoryId,
+      "toTerritoryId": toTerritoryId,
+      "armyCount": armyCount
+    }
   };
   channel.sink.add(JSON.jsonEncode(packet));
 }
 
-void moveArmy(int territoryFrom, int territoryTo, int armyCount, String token,
+void moveArmy(int fromTerritoryId, int toTerritoryId, int armyCount, String gameId, String token,
     IOWebSocketChannel channel) {
   var packet = {
-    "_type": "actors.MoveArmy",
+    "_type": "actors.ForwardToGame",
     "token": token,
-    "fromTerritoryId": territoryFrom,
-    "toTerritoryId": territoryTo,
-    "armyCount": armyCount
+    "gameId": gameId,
+    "msg": {
+      "_type": "actors.MoveArmy",
+      "token": token,
+      "fromTerritoryId": fromTerritoryId,
+      "toTerritoryId": toTerritoryId,
+      "armyCount": armyCount
+    }
   };
   channel.sink.add(JSON.jsonEncode(packet));
 }

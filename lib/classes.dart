@@ -57,17 +57,19 @@ class Game {
 class Territory {
   int armies;
   String ownerToken;
-  List neighbors; // called neighbours in frontend
+  List neighbours; // called neighbours in backend and frontend
   int id;
 
-  Territory(this.armies, this.ownerToken, this.neighbors, this.id);
+  Territory(this.armies, this.ownerToken, this.neighbours, this.id);
+  String toString() {
+    return "Territory armies=${this.armies} ownerToken=${this.ownerToken} neighbours=${this.neighbours} id=${this.id}";
+  }
 }
 
 /*class GameState {
   List<Player> players;
   GameMap map; // GameMap is called Map in our backend
   // GamePhase gamePhase;
-
   GameState(this.players, this.map);
 }*/
 
