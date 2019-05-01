@@ -20,7 +20,6 @@ var nameAssignResult = Maybe.Idk;
 var players = [];
 List<RoomBrief> rooms = [];
 RoomBrief joinedRoomBrief;
-// As of right now we're not really using joinedRoom for anything that we couldn't with joinedRoomBrief
 Room joinedRoom;
 var isReady = false;
 Game game = Game(MapResource("", []), "", [], [], "", "");
@@ -65,7 +64,7 @@ void main() async {
         temp = msg["state"]["map"]["territories"];
         for (dynamic obj in temp) {
           Territory tempTerritory = new Territory(
-              obj["armies"], obj["ownerToken"], obj["neighbors"], obj["id"]);
+              obj["armies"], obj["ownerToken"], obj["neighbours"], obj["id"]);
           game.territories.add(tempTerritory);
         }
         break;
@@ -156,13 +155,16 @@ class _HomePageState extends State<HomePage> {
             child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 children: <Widget>[
-          SizedBox(height: 80.0),
+          SizedBox(height: 40.0),
           Column(children: <Widget>[
             // Image.asset('assets/login_icon.png'),
-            SizedBox(height: 20.0),
-            Text('RISC!')
+            SizedBox(height: 40.0),
+            Text(
+                'RISC!',
+                style: DefaultTextStyle.of(context).style.apply(fontSizeFactor: 2)
+            )
           ]),
-          SizedBox(height: 120.0),
+          SizedBox(height: 40.0),
           TextField(
             decoration: InputDecoration(labelText: 'Enter Name'),
             onChanged: (text) {

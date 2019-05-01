@@ -11,7 +11,7 @@ class GamePage extends StatefulWidget {
 
 class _GamePageState extends State<GamePage> {
   // TODO: show place only when you have armies to place
-  var rows = [
+  /*var rows = [
     ["place", "attack", "move"]
   ]; // list of rows of text of buttons
   var selectedButtons = [
@@ -36,16 +36,23 @@ class _GamePageState extends State<GamePage> {
     fromTerritory = null;
     toTerritory = null;
     armyCount = 0;
-  }
+  }*/
+
+  final _tec = TextEditingController();
+  bool _commandSeemsValid = false;
 
   @override
   void initState() {
-    print("called");
+    print("game.dart initState() called");
     streamController.stream.listen((message) {
-      print("game received message");
+      print("game received message: " + message);
       Map<String, dynamic> msg = JSON.jsonDecode(message);
       setState(() {});
       switch (msg["_type"]) {
+        case 'actors.Ping':
+          var pong = {"_type": "actors.Pong", "token": token};
+          channel.sink.add(JSON.jsonEncode(pong));
+          break;
         case 'actors.NotifyGameStarted':
           game.map.viewBox = null;
           game.map.territories = null;
@@ -60,7 +67,7 @@ class _GamePageState extends State<GamePage> {
           temp = msg["state"]["map"]["territories"];
           for (dynamic obj in temp) {
             Territory tempTerritory = new Territory(
-                obj["armies"], obj["ownerToken"], obj["neighbors"], obj["id"]);
+                obj["armies"], obj["ownerToken"], obj["neighbours"], obj["id"]);
             game.territories.add(tempTerritory);
           }
           break;
@@ -75,7 +82,7 @@ class _GamePageState extends State<GamePage> {
           temp = msg["state"]["map"]["territories"];
           for (dynamic obj in temp) {
             Territory tempTerritory = new Territory(
-                obj["armies"], obj["ownerToken"], obj["neighbors"], obj["id"]);
+                obj["armies"], obj["ownerToken"], obj["neighbours"], obj["id"]);
             game.territories.add(tempTerritory);
           }
           print(game.territories.length);
@@ -108,11 +115,14 @@ class _GamePageState extends State<GamePage> {
             height: MediaQuery.of(context).size.height,
             child: Column(children: <Widget>[
               Container(
-                  height: MediaQuery.of(context).size.height * 0.75,
-                  child: _buildTerritoryList(context)),
+                  height: MediaQuery.of(context).size.height * 0.15,
+                  child: _buildCommandPrompt(context)),
               Container(
-                  height: MediaQuery.of(context).size.height * 0.10,
-                  child: _buildActionList(context))
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  child: _buildTerritoryList(context)),
+              // Container(
+              //     height: MediaQuery.of(context).size.height * 0.35,
+              //     child: _buildActionList(context)),
             ])));
   }
 
@@ -141,12 +151,14 @@ class _GamePageState extends State<GamePage> {
           }
         }
         return Text(
-            "Territory ${t.id}: ${t.armies} armies, owned by ${owner}");
+            "Territory ${t.id}: ${t.armies} armies, owned by ${owner}",
+            style: DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.2)
+        );
       },
     );
   }
 
-  ListView _buildActionList(BuildContext context) {
+  /*ListView _buildActionList(BuildContext context) {
     return ListView.builder(
         itemCount: rows.length,
         itemBuilder: (context, index) {
@@ -156,8 +168,8 @@ class _GamePageState extends State<GamePage> {
               child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: row.length,
-                  itemBuilder: (context, index) {
-                    final buttonText = row[index];
+                  itemBuilder: (context, j) {
+                    final buttonText = row[j];
                     if (buttonText == selectedButtons[index]) {
                       // TODO: return a selected-looking FlatButton
                     } else {
@@ -165,24 +177,42 @@ class _GamePageState extends State<GamePage> {
                           child: Text(buttonText),
                           onPressed: () {
                             selectedButtons[index] = buttonText;
+                            // TODO: rows is literally not changing, even though buttons are disappearing
+                            print("rows: " + rows.toString());
+                            print("All territories: " + game.territories.toString());
                             // TODO: possibly clear the later indices too
-                            rows = rows.sublist(0, index + 1);
-                            if (index == 0) {
-                              action = buttonText;
-                              // Add a row of ids of territories you own
-                              rows.add(game.territories
-                                  .where((territory) =>
-                                      territory.ownerToken == publicToken)
-                                  .map((territory) => territory.id.toString()));
-                            } else if (action == "place") {
-                              placeArmy(int.parse(buttonText), token, channel);
-                              clear();
+                            // rows = rows.sublist(0, index + 1);
+                            if (action == "place") {
+                              if (index == 0) {
+                                if (game.phase == "Setup") {
+                                  // Show all territories not already occupied
+                                  rows.add(game.territories
+                                    .where((territory) =>
+                                        territory.ownerToken == "")
+                                    .map((territory) => territory.id.toString()));
+                                } else {
+                                  // Show territories you own
+                                  rows.add(game.territories
+                                    .where((territory) =>
+                                        territory.ownerToken == "")
+                                    .map((territory) => territory.id.toString()));
+                                }
+                              } else {
+                                placeArmy(int.parse(buttonText), token, channel);
+                                clear();
+                              }
                             } else if (action == "attack" || action == "move") {
-                              if (index == 1) {
+                              if (index == 0) {
+                                // Show territories you own
+                                rows.add(game.territories
+                                    .where((territory) =>
+                                        territory.ownerToken == publicToken)
+                                    .map((territory) => territory.id.toString()));
+                              } else if (index == 1) {
                                 fromTerritory = getTerritory(buttonText);
                                 if (action == "attack") {
                                   // Show adjacent territories owned by other people
-                                  rows.add(fromTerritory.neighbors
+                                  rows.add(fromTerritory.neighbours
                                       .where((territory) =>
                                           territory.ownerToken != "" &&
                                           territory.ownerToken != publicToken)
@@ -190,14 +220,13 @@ class _GamePageState extends State<GamePage> {
                                           territory.id.toString()));
                                 } else {
                                   // Show adjacent territories owned by you
-                                  rows.add(fromTerritory.neighbors
+                                  rows.add(fromTerritory.neighbours
                                       .where((territory) =>
                                           territory.ownerToken == publicToken)
                                       .map((territory) =>
                                           territory.id.toString()));
                                 }
-                              }
-                              if (index == 2) {
+                              } else if (index == 2) {
                                 toTerritory = getTerritory(buttonText);
                                 // Show possible armyCounts
                                 rows.add(new List<int>.generate(
@@ -222,6 +251,50 @@ class _GamePageState extends State<GamePage> {
                     }
                   }));
         });
+  }*/
+
+  Row _buildCommandPrompt(BuildContext context) {
+    return Row(children: <Widget>[
+      Flexible(
+        child: TextField(
+          autofocus: true,
+          controller: _tec,
+          onChanged: (text) {
+            setState(() {
+              _commandSeemsValid = _tec.text.contains("place") || _tec.text.contains("Place") || _tec.text.contains("move") || _tec.text.contains("Move") || _tec.text.contains("attack") || _tec.text.contains("Attack");
+            });
+          },
+          decoration: InputDecoration(labelText: 'e.g., "place 2", "move 2 3 2", "attack 4 5 3"'),
+        )
+      ),
+      Container(
+        margin: EdgeInsets.symmetric(horizontal: 4.0),
+        child: IconButton(
+          icon: Icon(Icons.send),
+          onPressed: () => _commandSeemsValid ? _handleCommand(_tec.text) : null
+        )
+      )
+    ]);
+  }
+
+  void _handleCommand(String command) {
+    final args = command.split(" ");
+    print(args);
+    if (args[0] == "place") {
+      int territoryId = int.parse(args[1]);
+      placeArmy(territoryId, token, channel);
+    } else if (args[0] == "move") {
+      int territoryFrom = int.parse(args[1]);
+      int territoryTo = int.parse(args[2]);
+      int armyCount = int.parse(args[3]);
+      moveArmy(territoryFrom, territoryTo, armyCount, token, channel);
+    } else if (args[0] == "attack") {
+      int territoryFrom = int.parse(args[1]);
+      int territoryTo = int.parse(args[2]);
+      int armyCount = int.parse(args[3]);
+      attackTerritory(territoryFrom, territoryTo, armyCount, token, channel);
+    }
+    _tec.clear();
   }
 }
 
