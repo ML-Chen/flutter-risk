@@ -286,12 +286,14 @@ class _LobbyPageState extends State<LobbyPage> {
                                   print(
                                       'requested join room $room.roomId $token $channel');
                                   joinRoom(room.roomId, token, channel);
-                                } else if (!isReady) {
-                                  // TODO: READY button looks enabled even when there aren't enough players
-                                  clientReady(room.roomId, token, channel);
-                                  isReady = true;
                                 } else {
-                                  return null;
+                                  if (room.hostToken == publicToken)
+                                    startGame(room.roomId, token, channel);
+                                  if (!isReady) {
+                                    // TODO: READY button looks enabled even when there aren't enough players
+                                    clientReady(room.roomId, token, channel);
+                                    isReady = true;
+                                  }
                                 }
                               })));
                 }))
@@ -300,7 +302,6 @@ class _LobbyPageState extends State<LobbyPage> {
 }
 
 void _createRoomDialog(BuildContext context) {
-  String newRoomName;
   final tec = TextEditingController();
 
   showDialog<String>(

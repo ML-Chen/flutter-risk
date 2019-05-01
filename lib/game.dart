@@ -4,6 +4,21 @@ import 'dart:convert' as JSON;
 import 'packets.dart';
 import 'classes.dart';
 
+var terrNamesToIds = {
+  "C": 10,
+  "C++": 8,
+  "C#": 6,
+  "Java": 2,
+  "Scala": 11,
+  "Smalltalk": 9,
+  "Haskell": 3,
+  "OCaml": 7,
+  "SML": 4,
+  "Common Lisp": 1,
+  "Scheme": 12,
+  "Clojure": 5
+};
+
 class GamePage extends StatefulWidget {
   @override
   _GamePageState createState() => _GamePageState();
@@ -118,11 +133,16 @@ class _GamePageState extends State<GamePage> {
                   height: MediaQuery.of(context).size.height * 0.1,
                   child: _buildCommandPrompt(context)),
               Container(
-                  height: MediaQuery.of(context).size.height * 0.3,
+                  height: MediaQuery.of(context).size.height * 0.35,
                   child: _buildTerritoryList(context)),
               // Container(
               //     height: MediaQuery.of(context).size.height * 0.4,
-              //     child: Image.asset('assets/map.png'),
+              //     decoration: BoxDecoration(
+              //       image: DecorationImage(
+              //         image: ExactAssetImage('assets/example.png'),
+              //         fit: BoxFit.fitHeight,
+              //       )
+              //     )
               // )
               // Container(
               //     height: MediaQuery.of(context).size.height * 0.35,
@@ -140,23 +160,26 @@ class _GamePageState extends State<GamePage> {
         if (t.ownerToken == '') {
           owner = "No one";
         } else {
-          if (joinedRoom.clientStatus != null) {
-            for (ClientStatus player in joinedRoom.clientStatus) {
-              if (t.ownerToken == player.publicToken) {
-                owner = player.name;
-              }
-            }
-          } else {
-            print("Client status is null");
-          }
+          // TODO: doesn't seem to ever display the owner if it's not No one or You
+          // if (joinedRoom.clientStatus != null) {
+          //   for (ClientStatus player in joinedRoom.clientStatus) {
+          //     if (t.ownerToken == player.publicToken) {
+          //       owner = player.name;
+          //     }
+          //   }
+          // } else {
+          //   print("Client status is null");
+          // }
 
           if (t.ownerToken == publicToken) {
             owner = "You";
+          } else {
+            owner = t.ownerToken.substring(0, 4);
           }
         }
         return Text(
             "Territory ${t.id}: ${t.armies} armies, owned by ${owner}",
-            style: DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.2)
+            style: DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.1)
         );
       },
     );
@@ -268,7 +291,7 @@ class _GamePageState extends State<GamePage> {
               _commandSeemsValid = _tec.text.contains("place") || _tec.text.contains("Place") || _tec.text.contains("move") || _tec.text.contains("Move") || _tec.text.contains("attack") || _tec.text.contains("Attack");
             });
           },
-          decoration: InputDecoration(labelText: 'e.g., "place 2", "move 2 3 2", "attack 4 5 3"'),
+          decoration: InputDecoration(labelText: 'e.g., "place Scala", "move OCaml SML 2", "attack 4 5 3"'),
         )
       ),
       Container(
@@ -285,20 +308,24 @@ class _GamePageState extends State<GamePage> {
     final args = command.split(" ");
     print(args);
     if (args[0] == "place" || args[0] == "Place") {
-      int territoryId = int.parse(args[1]);
+      int territoryId = _parseTerr(args[1]);
       placeArmy(territoryId, joinedRoomBrief.roomId, token, channel);
     } else if (args[0] == "move" || args[0] == "Move") {
-      int territoryFrom = int.parse(args[1]);
-      int territoryTo = int.parse(args[2]);
+      int territoryFrom = _parseTerr(args[1]);
+      int territoryTo = _parseTerr(args[2]);
       int armyCount = int.parse(args[3]);
       moveArmy(territoryFrom, territoryTo, armyCount, joinedRoomBrief.roomId, token, channel);
     } else if (args[0] == "attack" || args[0] == "Attack") {
-      int territoryFrom = int.parse(args[1]);
-      int territoryTo = int.parse(args[2]);
+      int territoryFrom = _parseTerr(args[1]);
+      int territoryTo = _parseTerr(args[2]);
       int armyCount = int.parse(args[3]);
       attackTerritory(territoryFrom, territoryTo, armyCount, joinedRoomBrief.roomId, token, channel);
     }
     _tec.clear();
+  }
+
+  int _parseTerr(String arg) {
+    return int.tryParse(arg) ?? terrNamesToIds[arg];
   }
 }
 
