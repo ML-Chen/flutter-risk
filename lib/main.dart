@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert' as JSON;
 import 'packets.dart';
 import 'classes.dart';
@@ -19,16 +20,20 @@ var nameAssignResult = Maybe.Idk;
 var players = [];
 List<RoomBrief> rooms = [];
 RoomBrief joinedRoomBrief;
+// As of right now we're not really using joinedRoom for anything that we couldn't with joinedRoomBrief
 Room joinedRoom;
 var isReady = false;
 Game game = Game(MapResource("", []), "", [], [], "", "");
 var turn = ""; // the publicToken of whose turn it is
 var turnPhase = "";
 
+final StreamController<String> streamController =
+    new StreamController<String>.broadcast();
+
 void main() async {
   // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi IPv4 Address
   try {
-    channel = IOWebSocketChannel.connect('ws://128.61.118.238:9000/ws');
+    channel = IOWebSocketChannel.connect('ws://143.215.117.76:9000/ws');
     print("Connected to server");
   } catch (e) {
     print("Exception when connecting to server: " + e);
@@ -36,6 +41,7 @@ void main() async {
 
   var subscription = channel.stream.listen((message) {
     print("Message received: " + message);
+    streamController.add(message);
     Map<String, dynamic> msg = JSON.jsonDecode(message);
     switch (msg["_type"]) {
       case 'actors.Token':
@@ -44,11 +50,27 @@ void main() async {
         snackBarText = "Connected to server";
         showSnackBar = true;
         break;
+      case 'actors.NotifyGameStarted':
+        game.phase = 'Setup';
+        game.map.viewBox = null;
+        game.map.territories = null;
+        game.phase = 'Setup';
+        List<dynamic> temp = msg["state"]["players"];
+        for (dynamic obj in temp) {
+          Player tempPlayer = new Player();
+          tempPlayer.name = obj["name"];
+          tempPlayer.unitCount = obj["unitCount"];
+          game.players.add(tempPlayer);
+        }
+        temp = msg["state"]["map"]["territories"];
+        for (dynamic obj in temp) {
+          Territory tempTerritory = new Territory(
+              obj["armies"], obj["ownerToken"], obj["neighbors"], obj["id"]);
+          game.territories.add(tempTerritory);
+        }
+        break;
       case 'actors.Ping':
-        var pong = {
-          "_type": "actors.Pong",
-          "token": token
-        };
+        var pong = {"_type": "actors.Pong", "token": token};
         channel.sink.add(JSON.jsonEncode(pong));
         break;
       case 'actors.NameCheckResult':
@@ -66,71 +88,26 @@ void main() async {
           players.add(clientBrief["name"]);
         }
         break;
-      case 'actors.CreatedRoom':
-        snackBarText = "Room created";
-        showSnackBar = true;
-        break;
-      case 'actors.RoomCreationResult':
-        snackBarText = "Room creation failed";
-        showSnackBar = true;
-        break;
-      case 'actors.NotifyRoomsChanged':
-        rooms = [];
-        for (var room in msg["rooms"]) {
-          rooms.add(RoomBrief(room["name"], room["hostToken"], room["roomId"], room["numClients"]));
-        }
-        break;
       case 'actors.JoinedRoom':
         if (msg["playerToken"] == publicToken) {
-          joinedRoom = Room(
-            msg["name"],
-            msg["hostToken"],
-            msg["roomId"],
-            msg["clientStatus"].map((clientStatus) => ClientStatus(clientStatus["name"], clientStatus["token"], clientStatus["publicToken"])));
-          joinedRoomBrief = RoomBrief(msg["name"], msg["hostToken"], msg["roomId"], msg["clientStatus"].length);
+          joinedRoom = Room('', '', msg["token"], []);
+          joinedRoomBrief = RoomBrief('', '', msg["token"], 0);
         }
         break;
       case 'actors.NotifyClientsChanged':
         players = msg["players"];
         break;
-      // TODO: not sure what NotifyRoomStatus is
       case 'actors.NotifyRoomStatus':
-        // if (joinedRoom.roomId == msg["roomId"]) {
-          joinedRoom.name = msg["roomName"];
-          joinedRoom.clientStatus = msg["clientStatus"];
-          joinedRoomBrief.name = msg["roomName"];
-        // }
-        break;
-      case 'actors.NotifyGameStarted':
-        game.map.viewBox = null;
-        game.map.territories = null;
-        game.phase = 'Setup';
-        game.players = msg["players"];
-        game.territories = msg["map"]["territories"];
-        break;
-      case 'actors.NotifyGameState':
-        game.players = msg["players"];
-        game.territories = msg["map"]["territories"];
-        break;
-      case 'actors.NotifyGamePhaseStart':
-        game.phase = 'Realtime';
-        break;
-      case 'actors.SendMapResource':
-        game.map.viewBox = msg["viewBox"];
-        game.map.territories = msg["territories"];
-        break;
-      case 'actors.NotifyTurn':
-        turn = msg["publicToken"];
-        turnPhase = msg["turnPhase"];
-        break;
-      case 'actors.NotifyNewArmies':
-        snackBarText = "You got $msg['newArmies'] new armies.";
-        showSnackBar = true;
+        List<ClientStatus> temp;
+        msg["roomStatus"]["clientStatus"].map((clientStatus) => temp.add(
+            ClientStatus(clientStatus["name"], clientStatus["publicToken"])));
+        joinedRoom = Room(msg["roomStatus"]["name"],
+            msg["roomStatus"]["hostName"], msg["roomStatus"]["roomId"], temp);
+        //Not essential on mobile
         break;
       case 'actors.NotifyClientResumeStatus':
-        if (msg["name"])
-          yourName = msg["name"];
-          // TODO: consider refactoring yourName to displayName: { name: '', valid: null, committed: false }
+        if (msg["name"]) yourName = msg["name"];
+        // TODO: consider refactoring yourName to displayName: { name: '', valid: null, committed: false }
         if (msg["room"]) {
           if (joinedRoom == null) {
             // TODO: I'm pretty unsure about what exactly the msg here should be
@@ -153,22 +130,16 @@ void main() async {
 }
 
 class RiskApp extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "RISC!",
-      theme: kDefaultTheme,
-      home: HomePage()
-    );
+    return MaterialApp(title: "RISC!", theme: kDefaultTheme, home: HomePage());
   }
 }
 
 final ThemeData kDefaultTheme = new ThemeData(
-  primarySwatch: Colors.blue,
-  accentColor: Colors.purpleAccent[400],
-  brightness: Brightness.dark
-);
+    primarySwatch: Colors.blue,
+    accentColor: Colors.purpleAccent[400],
+    brightness: Brightness.dark);
 
 class HomePage extends StatefulWidget {
   @override
@@ -176,65 +147,54 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  var snackBar = SnackBar(
-    content: Text(snackBarText)
-  );
+  var snackBar = SnackBar(content: Text(snackBarText));
 
-  @override                               
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          children: <Widget>[
-            SizedBox(height: 80.0),
-            Column(
-              children: <Widget>[
-                // Image.asset('assets/login_icon.png'),
-                SizedBox(height: 20.0),
-                Text('RISC!')
-              ]
-            ),
-            SizedBox(height: 120.0),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Enter Name'
-              ),
-              onChanged: (text) {
-                yourName = text;
-                checkName(yourName, token, channel);
-                // TODO: check whether snackBar is showing up correctly
-                if (showSnackBar)  {
-                  showSnackBar = false;
-                  // Scaffold.of(context).showSnackBar(snackBar);
-                }
-              },
-              // See https://flutter.dev/docs/cookbook/forms/validation – we'd need to change this from a TextField to a TextFormField
-              // validator: (value) {
-              //   if (value.isEmpty) {
-              //     return 'Please enter some text';
-              //   } else if (nameIsValid == Maybe.False) {
-              //     return 'That name is already taken';
-              //   }
-              // }
-            ),
-            SizedBox(height: 12.0), // spacer
-            RaisedButton(
+        body: SafeArea(
+            child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                children: <Widget>[
+          SizedBox(height: 80.0),
+          Column(children: <Widget>[
+            // Image.asset('assets/login_icon.png'),
+            SizedBox(height: 20.0),
+            Text('RISC!')
+          ]),
+          SizedBox(height: 120.0),
+          TextField(
+            decoration: InputDecoration(labelText: 'Enter Name'),
+            onChanged: (text) {
+              yourName = text;
+              checkName(yourName, token, channel);
+              // TODO: check whether snackBar is showing up correctly
+              if (showSnackBar) {
+                showSnackBar = false;
+                // Scaffold.of(context).showSnackBar(snackBar);
+              }
+            },
+            // See https://flutter.dev/docs/cookbook/forms/validation – we'd need to change this from a TextField to a TextFormField
+            // validator: (value) {
+            //   if (value.isEmpty) {
+            //     return 'Please enter some text';
+            //   } else if (nameIsValid == Maybe.False) {
+            //     return 'That name is already taken';
+            //   }
+            // }
+          ),
+          SizedBox(height: 12.0), // spacer
+          RaisedButton(
               child: Text('START'),
               onPressed: () {
-                if (nameIsValid == Maybe.Idk || nameIsValid == Maybe.False) return null;
+                if (nameIsValid == Maybe.Idk || nameIsValid == Maybe.False)
+                  return null;
                 setName(yourName, token, channel);
                 listRoom(token, channel);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LobbyPage())
-                );
-              }
-            )
-          ]
-        )
-      )
-    );
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => LobbyPage()));
+              })
+        ])));
   }
 }
 
@@ -244,148 +204,135 @@ class LobbyPage extends StatefulWidget {
 }
 
 class _LobbyPageState extends State<LobbyPage> {
-  var players = [];
-  List<RoomBrief> rooms = [];
-  RoomBrief joinedRoomBrief;
-  Room joinedRoom;
-  var isReady = false;
-
-  _LobbyPageState() {
-    this.players = players;
-    this.rooms = rooms;
-    this.joinedRoomBrief = joinedRoomBrief;
-    this.joinedRoom = joinedRoom;
-    this.isReady = isReady;
+  @override
+  void initState() {
+    streamController.stream.listen((message) {
+      Map<String, dynamic> msg = JSON.jsonDecode(message);
+      setState(() {});
+      switch (msg["_type"]) {
+        case 'actors.CreatedRoom':
+          snackBarText = "Room created";
+          showSnackBar = true;
+          break;
+        case 'actors.RoomCreationResult':
+          snackBarText = "Room creation failed";
+          showSnackBar = true;
+          break;
+        case 'actors.NotifyRoomsChanged':
+          rooms = [];
+          for (var room in msg["rooms"]) {
+            rooms.add(RoomBrief(room["name"], room["hostToken"], room["roomId"],
+                room["numClients"]));
+          }
+          break;
+      }
+    });
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (game.phase != "") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => GamePage())
-      );
-    }
-
-    return Scaffold(
-      endDrawer: Drawer(
-        child: ListView.builder(
-          itemCount: players.length,
-          itemBuilder: (context, index) {
-            final item = players[index];
-            if (item == yourName)
-              return ListTile(
-                title: Text(item),
-                subtitle: Text("(me)")
-              );
-            else
-              return ListTile(
-                title: Text(item)
-              );
-          }
-        )
-      ),
-      appBar: AppBar(
-        title: Text('Rooms'),
-        actions: <Widget>[
-          Builder(
-            builder: (context) => IconButton(
-              icon: Icon(Icons.people),
-              onPressed: () => Scaffold.of(context).openEndDrawer(),
-              tooltip: 'Players'
-            )
-          ),
-          IconButton(
-            icon: Icon(Icons.add),
-            tooltip: 'Create Room',
-            onPressed: () => _createRoomDialog(context)
-          )
-        ]
-      ),
-      body: ListView.builder(
-        itemCount: rooms.length,
-        itemBuilder: (context, index) {
-          final room = rooms[index];
-          return ListTile(
-            title: Text(room.name),
-            subtitle: joinedRoomBrief.roomId == room.roomId ?
-              Text('👑${joinedRoom.hostName}, ${joinedRoom.clientStatus.where((client) => client.publicToken != publicToken).map((client) => client.name).join(', ')}') :
-              room.numClients == 1 ?
-                Text(room.numClients.toString() + " player") :
-                Text(room.numClients.toString() + " players"),
-            trailing: Opacity(
-              opacity: (joinedRoomBrief == null || joinedRoomBrief == room) ? 1.0 : 0.0,
-              child: FlatButton(
-                child: joinedRoomBrief.hostToken == publicToken ?
-                  const Text('START') :
-                  joinedRoomBrief == null || joinedRoomBrief.roomId != room.roomId ? const Text('JOIN') : const Text('READY'),
-                onPressed: () {
-                  if (room.hostToken == publicToken && room.numClients >= 3) {
-                    startGame(room.roomId, token, channel);
-                    print('requested start game for room $room $token $channel');
-                  } else if (joinedRoomBrief == null || joinedRoomBrief.roomId != room.roomId) {
-                    if (joinedRoomBrief != null)
-                      leaveRoom(joinedRoomBrief.roomId, token, channel);
-                    joinedRoomBrief = room;
-                    this.joinedRoomBrief = room;
-                    joinRoom(room.roomId, token, channel);
-                    print('requested join room $room $token $channel');
-                  } else if (!isReady && room.numClients >= 3 && room.numClients <= 6) {
-                  // TODO: READY button looks enabled even when there aren't enough players
-                    clientReady(room.roomId, token, channel);
-                    this.isReady = true;
-                    isReady = true;
-                  } else {
-                    return null;
-                  }
-                }
-              )
-            )
-          );
-        }
-      )
-    );
+    return game.phase == ""
+        ? Scaffold(
+            endDrawer: Drawer(
+                child: ListView.builder(
+                    itemCount: players.length,
+                    itemBuilder: (context, index) {
+                      final item = players[index];
+                      if (item == yourName)
+                        return ListTile(
+                            title: Text(item), subtitle: Text("(me)"));
+                      else
+                        return ListTile(title: Text(item));
+                    })),
+            appBar: AppBar(title: Text('Rooms'), actions: <Widget>[
+              Builder(
+                  builder: (context) => IconButton(
+                      icon: Icon(Icons.people),
+                      onPressed: () => Scaffold.of(context).openEndDrawer(),
+                      tooltip: 'Players')),
+              IconButton(
+                  icon: Icon(Icons.add),
+                  tooltip: 'Create Room',
+                  onPressed: () => _createRoomDialog(context))
+            ]),
+            body: ListView.builder(
+                itemCount: rooms.length,
+                itemBuilder: (context, index) {
+                  final room = rooms[index];
+                  return ListTile(
+                      title: Text(room.name),
+                      subtitle: Text(room.numClients.toString() + " players"),
+                      // ? Text("👑" + room.host) : Text("👑" + room.host + ", " + room.otherPlayers.join(", ")),
+                      trailing: Opacity(
+                          opacity: 1.0,
+                          child: FlatButton(
+                              // TODO: if you are the host, show START
+                              child: joinedRoomBrief == null ||
+                                      joinedRoomBrief.roomId != room.roomId
+                                  ? const Text('JOIN')
+                                  : ((!isReady)
+                                      ? const Text('READY')
+                                      : const Text('Waiting')),
+                              onPressed: () {
+                                if (joinedRoomBrief == null ||
+                                    joinedRoomBrief.roomId != room.roomId) {
+                                  if (joinedRoomBrief != null)
+                                    leaveRoom(
+                                        joinedRoomBrief.roomId, token, channel);
+                                  joinedRoomBrief = room;
+                                  print(
+                                      'requested join room $room.roomId $token $channel');
+                                  joinRoom(room.roomId, token, channel);
+                                } else if (!isReady &&
+                                    room.numClients >= 3 &&
+                                    room.numClients <= 6) {
+                                  // Button shows READY
+                                  // TODO: READY button looks enabled even when there aren't enough players
+                                  clientReady(room.roomId, token, channel);
+                                  isReady = true;
+                                } else {
+                                  return null;
+                                }
+                              })));
+                }))
+        : GamePage();
   }
 }
 
 void _createRoomDialog(BuildContext context) {
+  String newRoomName;
   final tec = TextEditingController();
 
   showDialog<String>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Create Room'),
-        content: Row(
-          children: <Widget>[
-            Expanded(
-              child: TextField(
-                autofocus: true,
-                controller: tec,
-                decoration: InputDecoration(
-                  hintText: 'Room name'
-                )
-              )
-            )
-          ],
-        ),
-        actions: <Widget>[
-          FlatButton(
-              child: const Text('CANCEL'),
-              onPressed: () {
-                Navigator.pop(context);
-              }),
-          FlatButton(
-              child: const Text('CREATE'),
-              onPressed: () {
-                createRoom(tec.text, token, channel);
-                // TODO: join room
-                Navigator.pop(context);
-              })
-        ]
-      );
-    }
-  );
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+            title: const Text('Create Room'),
+            content: Row(
+              children: <Widget>[
+                Expanded(
+                    child: TextField(
+                        autofocus: true,
+                        controller: tec,
+                        decoration: InputDecoration(hintText: 'Room name')))
+              ],
+            ),
+            actions: <Widget>[
+              FlatButton(
+                  child: const Text('CANCEL'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  }),
+              FlatButton(
+                  child: const Text('CREATE'),
+                  onPressed: () {
+                    createRoom(tec.text, token, channel);
+                    // TODO: join room
+                    Navigator.pop(context);
+                  })
+            ]);
+      });
 }
 
 /* References
