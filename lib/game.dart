@@ -327,6 +327,84 @@ class _GamePageState extends State<GamePage> {
   int _parseTerr(String arg) {
     return int.tryParse(arg) ?? terrNamesToIds[arg];
   }
+
+  /*ListView _buildActionList(BuildContext context) {
+    return ListView.builder(
+        itemCount: rows.length,
+        itemBuilder: (context, index) {
+          final row = rows[index];
+          return Container(
+              height: 50,
+              child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: row.length,
+                  itemBuilder: (context, index) {
+                    final buttonText = row[index];
+                    if (buttonText == selectedButtons[index]) {
+                      // TODO: return a selected-looking FlatButton
+                    } else {
+                      return FlatButton(
+                          child: Text(buttonText),
+                          onPressed: () {
+                            selectedButtons[index] = buttonText;
+                            // TODO: possibly clear the later indices too
+                            rows = rows.sublist(0, index + 1);
+                            if (index == 0) {
+                              action = buttonText;
+                              // Add a row of ids of territories you own
+                              rows.add(game.territories
+                                  .where((territory) =>
+                                      territory.ownerToken == publicToken)
+                                  .map((territory) => territory.id.toString()));
+                            } else if (action == "place") {
+                              placeArmy(int.parse(buttonText), token, channel);
+                              clear();
+                            } else if (action == "attack" || action == "move") {
+                              if (index == 1) {
+                                fromTerritory = getTerritory(buttonText);
+                                if (action == "attack") {
+                                  // Show adjacent territories owned by other people
+                                  rows.add(fromTerritory.neighbors
+                                      .where((territory) =>
+                                          territory.ownerToken != "" &&
+                                          territory.ownerToken != publicToken)
+                                      .map((territory) =>
+                                          territory.id.toString()));
+                                } else {
+                                  // Show adjacent territories owned by you
+                                  rows.add(fromTerritory.neighbors
+                                      .where((territory) =>
+                                          territory.ownerToken == publicToken)
+                                      .map((territory) =>
+                                          territory.id.toString()));
+                                }
+                              }
+                              if (index == 2) {
+                                toTerritory = getTerritory(buttonText);
+                                // Show possible armyCounts
+                                rows.add(new List<int>.generate(
+                                        fromTerritory.armies, (i) => i + 1)
+                                    .map((num) => num.toString()));
+                              } else {
+                                armyCount = int.parse(buttonText);
+                                if (action == "attack")
+                                  attackTerritory(
+                                      fromTerritory.id,
+                                      toTerritory.id,
+                                      armyCount,
+                                      token,
+                                      channel);
+                                else
+                                  moveArmy(fromTerritory.id, toTerritory.id,
+                                      armyCount, token, channel);
+                                clear();
+                              }
+                            }
+                          });
+                    }
+                  }));
+        });
+  }*/
 }
 
 Territory getTerritory(String id) {
