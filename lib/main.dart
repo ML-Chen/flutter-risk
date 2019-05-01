@@ -33,7 +33,7 @@ final StreamController<String> streamController =
 void main() async {
   // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi IPv4 Address
   try {
-    channel = IOWebSocketChannel.connect('ws://143.215.117.76:9000/ws');
+    channel = IOWebSocketChannel.connect('ws://128.61.122.96:9000/ws');
     print("Connected to server");
   } catch (e) {
     print("Exception when connecting to server: " + e);
@@ -284,10 +284,7 @@ class _LobbyPageState extends State<LobbyPage> {
                                   print(
                                       'requested join room $room.roomId $token $channel');
                                   joinRoom(room.roomId, token, channel);
-                                } else if (!isReady &&
-                                    room.numClients >= 3 &&
-                                    room.numClients <= 6) {
-                                  // Button shows READY
+                                } else if (!isReady) {
                                   // TODO: READY button looks enabled even when there aren't enough players
                                   clientReady(room.roomId, token, channel);
                                   isReady = true;

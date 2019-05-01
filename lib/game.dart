@@ -141,7 +141,7 @@ class _GamePageState extends State<GamePage> {
           }
         }
         return Text(
-            "Territory ${t.id} has ${t.armies} armies and is owned by ${owner}");
+            "Territory ${t.id}: ${t.armies} armies, owned by ${owner}");
       },
     );
   }
