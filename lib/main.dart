@@ -32,7 +32,7 @@ final StreamController<String> streamController =
 void main() async {
   // To find the IP of your server, type ipconfig in Command Prompt and look at Wireless LAN adapter Wi-Fi IPv4 Address
   try {
-    channel = IOWebSocketChannel.connect('ws://128.61.122.96:9000/ws');
+    channel = IOWebSocketChannel.connect('ws://222.222.2.22:9000/ws');
     print("Connected to server");
   } catch (e) {
     print("Exception when connecting to server: " + e);

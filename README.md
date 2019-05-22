@@ -1,4 +1,4 @@
-# cs2340_team22_mobile
+# CS 2340 Risk Mobile
 
 A real-time Risk mobile app. Created for CS 2340 with Dr. Christopher Simpkins, Spring 2019.
 
@@ -9,9 +9,16 @@ A real-time Risk mobile app. Created for CS 2340 with Dr. Christopher Simpkins, 
 3. Update the line in `main.dart` in the format of `channel = IOWebSocketChannel.connect('ws://[your-ip]:9000/ws');`.
 4. Plug in your phone or set up a virtual device.
 5. In this directory, run `flutter run`.
-6. Start the backend server at [link to be posted].
+6. Start the backend server at [OhadRau/scala-risk](https://github.com/OhadRau/scala-risk).
+
+## Screenshots
+
+<img src="Start.gif" alt="Start screen" width="400"/>
+<img src="Create room.gif" alt="Room creation dialog" width="400"/>
+<img src="Players list.gif" alt="Players list" width="400"/>
+<img src="Gameplay.gif" alt="Gameplay" width="400"/>
 
 ## Authors
 
-- Michael Chen
-- Hemang Ravjanshy
+- Michael Chen ([michaelchen21](https://github.com/michaelchen21))
+- Hemang Rajvanshy ([HemangRajvanshy](https://github.com/HemangRajvanshy))
