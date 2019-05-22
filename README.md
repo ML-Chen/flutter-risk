@@ -18,7 +18,9 @@ A real-time Risk mobile app. Created for CS 2340 with Dr. Christopher Simpkins, 
 
 ## Screenshots
 
-<img src="Start.gif" alt="Start screen" width="250"/>
-<img src="Create room.gif" alt="Room creation dialog" width="250"/>
-<img src="Players list.gif" alt="Players list" width="250"/>
-<img src="Gameplay.gif" alt="Gameplay" width="250"/>
+<p float="left">
+    <img src="Start.gif" alt="Start screen" width="250"/>
+    <img src="Create room.gif" alt="Room creation dialog" width="250"/>
+    <img src="Players list.gif" alt="Players list" width="250"/>
+    <img src="Gameplay.gif" alt="Gameplay" width="250"/>
+</p>
